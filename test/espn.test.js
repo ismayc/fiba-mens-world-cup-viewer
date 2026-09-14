@@ -23,8 +23,8 @@ import {
 import { espnScoreboard } from './helpers/tournament.js'
 
 const num = (games, n) => games.find((g) => g.num === n)
-// Game 1: United States v Nigeria, 2027-08-27 14:00 +03:00 = 11:00Z, Lusail.
-const PAIR1 = 'pair:Nigeria|United States'
+// Game 1: Angola v Italy, 2023-08-25 16:00 +08:00 = 08:00Z, Philippine Arena.
+const PAIR1 = 'pair:Angola|Italy'
 
 function mockFeed(payload) {
   global.fetch = vi.fn(async () => ({ ok: true, json: async () => payload }))
@@ -69,26 +69,26 @@ describe('period arithmetic', () => {
 
 describe('date windows', () => {
   it('asks for yesterday, today and tomorrow', () => {
-    const dates = scoreboardDates(new Date('2027-08-30T12:00:00Z'))
-    expect(dates).toEqual(['20270829', '20270830', '20270831'])
+    const dates = scoreboardDates(new Date('2023-08-30T12:00:00Z'))
+    expect(dates).toEqual(['20230829', '20230830', '20230831'])
   })
 
-  // ESPN buckets a dates= query by the US-EASTERN day. Game 1 tips at 11:00Z,
-  // which is 07:00 in New York the same day.
+  // ESPN buckets a dates= query by the US-EASTERN day. Game 1 tips at 08:00Z,
+  // which is 04:00 in New York the same day.
   it('backfills a past game under ESPN’s Eastern day', () => {
     const g = num(GAMES, 1)
-    const dates = historyDates([g], new Date('2027-09-10T12:00:00Z'))
-    expect(dates).toEqual(['20270827'])
+    const dates = historyDates([g], new Date('2023-09-10T12:00:00Z'))
+    expect(dates).toEqual(['20230825'])
   })
 
   it('skips games that have not tipped off, and those inside the live window', () => {
-    expect(historyDates(GAMES, new Date('2027-08-20T12:00:00Z'))).toEqual([])
+    expect(historyDates(GAMES, new Date('2023-08-20T12:00:00Z'))).toEqual([])
     const g = num(GAMES, 1)
-    expect(historyDates([g], new Date('2027-08-27T20:00:00Z'))).toEqual([])
+    expect(historyDates([g], new Date('2023-08-25T20:00:00Z'))).toEqual([])
   })
 
   it('ignores a game with no tip-off time', () => {
-    expect(historyDates([{ ...num(GAMES, 85), ko: null }], new Date('2027-09-20T12:00:00Z'))).toEqual([])
+    expect(historyDates([{ ...num(GAMES, 85), ko: null }], new Date('2023-09-20T12:00:00Z'))).toEqual([])
   })
 })
 
@@ -112,7 +112,7 @@ describe('fetchLive', () => {
 
   it('dedupes the same game across adjacent date queries', async () => {
     mockFeed(espnScoreboard([num(GAMES, 1)]))
-    const map = await fetchLive(undefined, ['20270826', '20270827'])
+    const map = await fetchLive(undefined, ['20230824', '20230825'])
     expect(map.size).toBe(3)
   })
 })
@@ -153,11 +153,11 @@ describe('applyLive', () => {
   it('flips the scoreline when ESPN’s home/away is the other way round', async () => {
     const feed = espnScoreboard([g1], { 1: { state: 'post', score: [88, 61] } })
     feed.events[0].competitions[0].competitors = [
-      { homeAway: 'home', score: '88', team: { id: '1', displayName: 'United States' } },
-      { homeAway: 'away', score: '61', team: { id: '2', displayName: 'Nigeria' } },
+      { homeAway: 'home', score: '88', team: { id: '1', displayName: 'Angola' } },
+      { homeAway: 'away', score: '61', team: { id: '2', displayName: 'Italy' } },
     ]
     mockFeed(feed)
-    // t1 is United States, so its 88 must stay first.
+    // t1 is Angola, so its 88 must stay first.
     expect(num(applyLive(GAMES, await fetchLive()), 1).score).toEqual([88, 61])
   })
 
@@ -193,20 +193,20 @@ describe('matching a game to its feed record', () => {
     feed.events[0].competitions[0].competitors[0].team.displayName = 'Spain'
     mockFeed(feed)
     const out = applyLive(GAMES, await fetchLive())
-    expect(num(out, 1).t1).toBe('United States')
-    expect(num(out, 1).t2).toBe('Nigeria')
+    expect(num(out, 1).t1).toBe('Angola')
+    expect(num(out, 1).t2).toBe('Italy')
   })
 
   it('adopts ESPN’s teams for an unresolved knockout slot, matched by instant', async () => {
     const qf = slot()
     const board = GAMES.map((g) => (g.num === 85 ? qf : g))
-    const feed = espnScoreboard([{ ...qf, t1: 'Spain', t2: 'Nigeria', espnId: '999' }], {
+    const feed = espnScoreboard([{ ...qf, t1: 'Spain', t2: 'Serbia', espnId: '999' }], {
       85: { state: 'post', score: [80, 70] },
     })
     mockFeed(feed)
     const out = applyLive(board, await fetchLive())
     expect(num(out, 85).t1).toBe('Spain')
-    expect(num(out, 85).t2).toBe('Nigeria')
+    expect(num(out, 85).t2).toBe('Serbia')
     expect(num(out, 85).score).toEqual([80, 70])
     expect(num(out, 85).espnId).toBe('999')
   })
@@ -214,7 +214,7 @@ describe('matching a game to its feed record', () => {
   it('pins down a TBC tip-off once ESPN publishes the fixture', async () => {
     const qf = slot({ tbdTip: true })
     const board = GAMES.map((g) => (g.num === 85 ? qf : g))
-    const feed = espnScoreboard([{ ...qf, t1: 'Spain', t2: 'Nigeria', espnId: '999' }])
+    const feed = espnScoreboard([{ ...qf, t1: 'Spain', t2: 'Serbia', espnId: '999' }])
     mockFeed(feed)
     const out = applyLive(board, await fetchLive())
     expect(num(out, 85).tbdTip).toBe(false)
@@ -225,7 +225,7 @@ describe('matching a game to its feed record', () => {
     const qf = slot({ tbdTip: true })
     const board = GAMES.map((g) => (g.num === 85 ? qf : g))
     mockFeed(
-      espnScoreboard([{ ...qf, t1: 'Spain', t2: 'Nigeria', espnId: '999' }], {
+      espnScoreboard([{ ...qf, t1: 'Spain', t2: 'Serbia', espnId: '999' }], {
         85: { state: 'post', score: [80, 70] },
       }),
     )
@@ -253,8 +253,8 @@ describe('malformed and one-off feed records', () => {
       events: [
         {
           id: '1',
-          date: '2027-08-27T11:00Z',
-          competitions: [{ competitors: [{ homeAway: 'home', team: { displayName: 'Nigeria' } }] }],
+          date: '2023-08-25T08:00Z',
+          competitions: [{ competitors: [{ homeAway: 'home', team: { displayName: 'Angola' } }] }],
         },
       ],
     })

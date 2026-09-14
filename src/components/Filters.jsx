@@ -17,10 +17,10 @@ const GROUPS = Object.keys(TEAMS)
 // must actually return games in THIS edition: these are buttons, and a chip
 // carrying a team that never played or a city with no venue empties the schedule
 // on click. A search-examples test asserts each one still returns at least one
-// game, so keep them pointed at real placeholder-field data.
+// game, so keep them pointed at real 2023 data.
 export const SEARCH_EXAMPLES = [
   'team: Japan',
-  'arena: Lusail Sports Arena',
+  'arena: Mall of Asia Arena',
   'stage: Final',
   'group: C',
 ]
@@ -68,7 +68,7 @@ export default function Filters({ filters, setFilters, tz, setTz, detectedTz, re
               className="search"
               type="search"
               autoFocus
-              placeholder='Search, try "team: Japan" or "arena: Lusail Sports Arena"'
+              placeholder='Search, try "team: Japan" or "arena: Mall of Asia Arena"'
               value={filters.search}
               onChange={(e) => update({ search: e.target.value })}
             />

@@ -86,7 +86,7 @@ describe('filtering', () => {
     expect(document.querySelector('.filter-count').textContent).toBe('1')
 
     fireEvent.change(field('Team'), { target: { value: 'all' } })
-    fireEvent.change(field('Arena'), { target: { value: 'lusail' } })
+    fireEvent.change(field('Arena'), { target: { value: 'moa' } })
     const arenaOnly = document.querySelectorAll('.card').length
     expect(arenaOnly).toBeGreaterThan(0)
     expect(arenaOnly).toBeLessThan(92)
@@ -137,9 +137,10 @@ describe('services filtering', () => {
     expect(screen.getByRole('button', { name: /My services \(1\)/ })).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /On my services/ }))
-    // No US rights deal exists for 2027 yet, so every game's coverage is
-    // "unknown" and is KEPT under the filter rather than hidden. The filter is
-    // still wired (svc=1), it just cannot narrow anything until the rights land.
+    // The committed 2023 board names no US broadcaster (every game's tv is
+    // empty), so every game's coverage is "unknown" and is KEPT under the filter
+    // rather than hidden. The filter is still wired (svc=1), it just cannot
+    // narrow anything while no game lists a service.
     expect(document.querySelectorAll('.card')).toHaveLength(92)
     expect(window.location.search).toContain('svc=1')
   })
@@ -291,10 +292,10 @@ describe('result alerts', () => {
     payload = espnScoreboard([num(1)], { 1: { state: 'post', score: [88, 61] } })
     fireEvent.click(screen.getByRole('button', { name: /Refresh/ }))
 
-    const toast = await screen.findByText(/FINAL: United States win/)
+    const toast = await screen.findByText(/FINAL: Angola win/)
     expect(toast).toBeInTheDocument()
     fireEvent.click(screen.getByLabelText('Dismiss'))
-    await waitFor(() => expect(screen.queryByText(/FINAL: United States win/)).not.toBeInTheDocument())
+    await waitFor(() => expect(screen.queryByText(/FINAL: Angola win/)).not.toBeInTheDocument())
   })
 
   it('opens the game from its toast', async () => {
@@ -307,7 +308,7 @@ describe('result alerts', () => {
     payload = espnScoreboard([num(1)], { 1: { state: 'post', score: [88, 61] } })
     fireEvent.click(screen.getByRole('button', { name: /Refresh/ }))
 
-    await screen.findByText(/FINAL: United States win/)
+    await screen.findByText(/FINAL: Angola win/)
     fireEvent.click(screen.getByTitle('Open game details'))
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
@@ -384,7 +385,7 @@ describe('result alerts', () => {
 
 describe('the tournament being over', () => {
   const finished = () => {
-    const board = GAMES.map((g) => ({ ...g, score: [90, 70], t1: g.t1 ?? 'Japan', t2: g.t2 ?? 'Mali' }))
+    const board = GAMES.map((g) => ({ ...g, score: [90, 70], t1: g.t1 ?? 'Japan', t2: g.t2 ?? 'Angola' }))
     return espnScoreboard(
       board.filter((g) => g.espnId),
       Object.fromEntries(board.map((g) => [g.num, { state: 'post', score: [90, 70] }])),
@@ -395,7 +396,7 @@ describe('the tournament being over', () => {
   // clock has to be moved past the Final for this state to exist at all.
   it('stops auto-refreshing once every game is played and the last one has passed', async () => {
     vi.useFakeTimers()
-    vi.setSystemTime(new Date('2027-09-20T12:00:00Z'))
+    vi.setSystemTime(new Date('2023-09-20T12:00:00Z'))
     feed(finished())
     mount()
     await vi.waitFor(() => expect(document.querySelector('.results-auto')).toBeTruthy())
@@ -440,8 +441,8 @@ describe('App remaining arms', () => {
     await waitFor(() => expect(noteText()).toMatch(/First round complete/))
     expect(noteText()).toMatch(/3 first-round games hidden/)
 
-    // Japan v Lebanon is a single first-round game (both in Group G).
-    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'Japan Lebanon' } })
+    // Japan v Finland is a single first-round game (both in Group E).
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'Japan Finland' } })
     await waitFor(() => expect(noteText()).toMatch(/1 first-round game hidden/))
   })
 

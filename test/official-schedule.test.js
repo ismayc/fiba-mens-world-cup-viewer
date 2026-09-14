@@ -22,8 +22,8 @@ describe('committed schedule vs the authority', () => {
   it('matches the edition’s headline numbers', () => {
     expect(GAMES).toHaveLength(EDITION.games)
     expect(Object.keys(GROUPS)).toEqual(EDITION.groups)
-    expect(EDITION.year).toBe(2027)
-    expect(EDITION.provisional).toBe(true)
+    expect(EDITION.year).toBe(2023)
+    expect(EDITION.provisional).toBe(false)
   })
 
   it('keeps the authority’s teams, group, venue and tip-off for every first-round game', () => {
@@ -48,7 +48,7 @@ describe('committed schedule vs the authority', () => {
     }
   })
 
-  it('assigns every game one of the four authoritative venues', () => {
+  it('assigns every game one of the five authoritative venues', () => {
     const keys = new Set(Object.keys(VENUE_META))
     for (const g of GAMES) expect(keys.has(g.venue), `game ${g.num}`).toBe(true)
   })
@@ -64,12 +64,22 @@ describe('team-name resolution', () => {
   })
 
   // ESPN names the sides as we do, so the overlay needs no aliases. The build-time
-  // aliases only map feed spellings that never appear as our canonical names.
-  it('needs no ESPN overlay aliases, and its build aliases resolve to real teams', () => {
+  // aliases map feed spellings to canonical nation names. Most target a team in this
+  // edition's field (USA, Ivory Coast), and every one of those must name a real team.
+  // A few are general normalizations for nations that did not qualify in 2023 (e.g.
+  // Turkey -> Türkiye), so they resolve without being in the field.
+  it('needs no ESPN overlay aliases, and its build aliases canonicalize correctly', () => {
     expect(ESPN_ALIASES).toEqual({})
     for (const [from, to] of Object.entries(ALIASES)) {
       expect(canon(from)).toBe(to)
-      expect(ALL_TEAMS, `${from} -> ${to}`).toContain(to)
+      if (ALL_TEAMS.includes(to)) {
+        expect(FLAGS[to], `${from} -> ${to}`).toBeTruthy()
+      }
     }
+    // The aliases that DO name a 2023 team resolve to real teams.
+    expect(canon('USA')).toBe('United States')
+    expect(ALL_TEAMS).toContain('United States')
+    expect(canon('Ivory Coast')).toBe("Côte d'Ivoire")
+    expect(ALL_TEAMS).toContain("Côte d'Ivoire")
   })
 })

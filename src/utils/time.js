@@ -3,6 +3,7 @@
 // rendered into whatever timezone the viewer selects.
 
 import { TEAM_TIMEZONES } from '../data/teamTimezones.js'
+import { VENUES } from '../data/venues.js'
 import { LEAGUE } from '../config/league.js'
 
 // The viewer's own IANA timezone, e.g. "America/Chicago" or "Europe/London".
@@ -17,13 +18,15 @@ export function detectTimezone() {
 // The timezones offered in the picker, plus the viewer's own detected zone
 // (deduped) so they can always switch back to it.
 //
-// Derived rather than hand-listed: the host zone and UTC first, then a home zone
-// for every competing nation, taken straight from TEAM_TIMEZONES. Deriving it
-// guarantees every team's clock is selectable, which a hand-list drifted out of
-// step with when the field changed.
+// Derived rather than hand-listed: the host zone and UTC first, then every host
+// arena's zone (2023 was co-hosted across three timezones, and Jakarta's is not any
+// competing nation's), then a home zone for every competing nation, taken straight
+// from TEAM_TIMEZONES. Deriving it guarantees every team's and every venue's clock
+// is selectable, which a hand-list drifted out of step with when the field changed.
 export function timezoneOptions(detected) {
+  const venues = [...new Set(Object.values(VENUES).map((v) => v.tz))]
   const nations = [...new Set(Object.values(TEAM_TIMEZONES).flat())].sort()
-  const set = new Set([detected, LEAGUE.host.tz, 'UTC', 'Europe/London', ...nations])
+  const set = new Set([detected, LEAGUE.host.tz, 'UTC', 'Europe/London', ...venues, ...nations])
   return [...set]
 }
 

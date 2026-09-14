@@ -55,10 +55,10 @@ describe('resolving the group-fed rounds', () => {
       expect(FLAG_BY_TEAM[g.t1], `game ${g.num} side 1`).toBeTruthy()
       expect(FLAG_BY_TEAM[g.t2], `game ${g.num} side 2`).toBeTruthy()
     }
-    // Group I game "Winner Group A" v "Winner Group B" -> United States v Serbia.
+    // Game 49 is Group I's "Winner Group B" v "2nd Group A" -> Serbia v Dominican Republic.
     const g49 = out.find((x) => x.num === 49)
-    expect([g49.t1, g49.t2]).toContain('United States')
     expect([g49.t1, g49.t2]).toContain('Serbia')
+    expect([g49.t1, g49.t2]).toContain('Dominican Republic')
   })
 
   it('leaves a second-round game a placeholder while its first-round group is unfinished', () => {
@@ -82,7 +82,7 @@ describe('resolving the group-fed rounds', () => {
   it('keeps the label alongside a resolved team', () => {
     const out = resolvePlacingSlots(afterR1, ['R2'])
     const g49 = out.find((x) => x.num === 49)
-    expect(g49.label1).toBe('Winner Group A')
+    expect(g49.label1).toBe('Winner Group B')
     expect(FLAG_BY_TEAM[g49.t1]).toBeTruthy()
   })
 })

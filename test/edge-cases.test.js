@@ -27,7 +27,7 @@ const A = (results) => withGroupScores('A', results, GAMES)
 describe('malformed game records', () => {
   it('skips a group game naming a team outside the group', () => {
     const bogus = GAMES.map((g) =>
-      g.stage === 'R1' && g.group === 'A' && g.t1 === 'United States'
+      g.stage === 'R1' && g.group === 'A' && g.t1 === 'Italy'
         ? { ...g, t1: 'Narnia', score: [80, 70] }
         : g,
     )
@@ -38,43 +38,43 @@ describe('malformed game records', () => {
   })
 
   it('skips a level score in the head-to-head sub-table', () => {
-    const drawn = A([['United States', 'Greece', 70, 70]])
-    expect(headToHead(['United States', 'Greece'], drawn)).toEqual({
-      'United States': { Pts: 0, PD: 0, PF: 0 },
-      Greece: { Pts: 0, PD: 0, PF: 0 },
+    const drawn = A([['Italy', 'Dominican Republic', 70, 70]])
+    expect(headToHead(['Italy', 'Dominican Republic'], drawn)).toEqual({
+      'Italy': { Pts: 0, PD: 0, PF: 0 },
+      'Dominican Republic': { Pts: 0, PD: 0, PF: 0 },
     })
   })
 
   it('records the head-to-head win whichever way round the record lists it', () => {
-    const usWon = A([['United States', 'Greece', 90, 60]])
-    const greeceWon = A([['United States', 'Greece', 60, 90]])
-    expect(headToHead(['United States', 'Greece'], usWon)['United States'].Pts).toBe(2)
-    expect(headToHead(['United States', 'Greece'], greeceWon).Greece.Pts).toBe(2)
-    expect(headToHead(['United States', 'Greece'], greeceWon)['United States'].Pts).toBe(1)
+    const italyWon = A([['Italy', 'Dominican Republic', 90, 60]])
+    const drWon = A([['Italy', 'Dominican Republic', 60, 90]])
+    expect(headToHead(['Italy', 'Dominican Republic'], italyWon)['Italy'].Pts).toBe(2)
+    expect(headToHead(['Italy', 'Dominican Republic'], drWon)['Dominican Republic'].Pts).toBe(2)
+    expect(headToHead(['Italy', 'Dominican Republic'], drWon)['Italy'].Pts).toBe(1)
   })
 
   it('ignores a level score when counting group points', () => {
-    const drawn = A([['United States', 'Nigeria', 70, 70]])
-    expect(computeClinch(drawn)['United States']).toBeNull()
-    expect(groupPositionBounds(drawn)['United States']).toEqual({ best: 1, worst: 4 })
+    const drawn = A([['Italy', 'Angola', 70, 70]])
+    expect(computeClinch(drawn)['Italy']).toBeNull()
+    expect(groupPositionBounds(drawn)['Italy']).toEqual({ best: 1, worst: 4 })
   })
 })
 
 describe('a total tie nothing can separate', () => {
-  // US, Greece and Dominican Republic form a 2-1 cycle with the SAME margin in all
-  // three games, and each beats Nigeria by the same margin, so they are level on
-  // every computable criterion. Only a drawing of lots is left.
+  // Italy, Dominican Republic and Philippines form a 2-1 cycle with the SAME margin
+  // in all three games, and each beats Angola by the same margin, so they are level
+  // on every computable criterion. Only a drawing of lots is left.
   const mirrored = A([
-    ['United States', 'Greece', 80, 70],
-    ['Greece', 'Dominican Republic', 80, 70],
-    ['Dominican Republic', 'United States', 80, 70],
-    ['United States', 'Nigeria', 90, 60],
-    ['Nigeria', 'Greece', 60, 90],
-    ['Dominican Republic', 'Nigeria', 90, 60],
+    ['Italy', 'Dominican Republic', 80, 70],
+    ['Dominican Republic', 'Philippines', 80, 70],
+    ['Philippines', 'Italy', 80, 70],
+    ['Italy', 'Angola', 90, 60],
+    ['Angola', 'Dominican Republic', 60, 90],
+    ['Philippines', 'Angola', 90, 60],
   ])
 
   it('really is level on every computable criterion', () => {
-    const tied = rankGroup(TEAMS.A, mirrored).filter((r) => r.name !== 'Nigeria')
+    const tied = rankGroup(TEAMS.A, mirrored).filter((r) => r.name !== 'Angola')
     expect(tied).toHaveLength(3)
     for (const r of tied) {
       expect(r.Pts).toBe(5)
@@ -86,7 +86,7 @@ describe('a total tie nothing can separate', () => {
   })
 
   it('cannot produce a four-way tie on points, by arithmetic', () => {
-    for (const board of [mirrored, A([['United States', 'Nigeria', 80, 70]]), GAMES]) {
+    for (const board of [mirrored, A([['Italy', 'Angola', 80, 70]]), GAMES]) {
       const rows = rankGroup(TEAMS.A, board)
       const allSame = rows.every((r) => r.Pts === rows[0].Pts)
       const anyPlayed = rows.some((r) => r.P > 0)
@@ -110,32 +110,32 @@ describe('a total tie nothing can separate', () => {
 
 describe('the restart rule', () => {
   // A three-way tie that head-to-head splits into ONE clear leader and TWO teams
-  // still level, the only shape that reaches the recursive re-rank. US, Greece and
-  // Dominican Republic finish 2-1; in the head-to-head mini-league US is clear on
-  // point difference while Greece and Dominican Republic remain level, and the
-  // restart pass ranks them on the game between just those two.
+  // still level, the only shape that reaches the recursive re-rank. Italy, Dominican
+  // Republic and Philippines finish 2-1; in the head-to-head mini-league Italy is
+  // clear on point difference while Dominican Republic and Philippines remain level,
+  // and the restart pass ranks them on the game between just those two.
   const board = A([
-    ['United States', 'Greece', 100, 70], // US +30 in the cycle
-    ['Greece', 'Dominican Republic', 85, 65], // Greece +20
-    ['Dominican Republic', 'United States', 90, 80], // DR +10  (2*20 = 30 + 10)
-    ['United States', 'Nigeria', 95, 60],
-    ['Nigeria', 'Greece', 60, 95],
-    ['Dominican Republic', 'Nigeria', 95, 60],
+    ['Italy', 'Dominican Republic', 100, 70], // Italy +30 in the cycle
+    ['Dominican Republic', 'Philippines', 85, 65], // Dominican Republic +20
+    ['Philippines', 'Italy', 90, 80], // Philippines +10  (2*20 = 30 + 10)
+    ['Italy', 'Angola', 95, 60],
+    ['Angola', 'Dominican Republic', 60, 95],
+    ['Philippines', 'Angola', 95, 60],
   ])
 
   it('leaves exactly two of the three level while the leader is clear', () => {
     const tied = rankGroup(TEAMS.A, board).filter((r) => r.Pts === 5)
     expect(tied).toHaveLength(3)
     const sub = headToHead(tied.map((r) => r.name), board)
-    expect(sub.Greece).toEqual(sub['Dominican Republic'])
-    expect(sub['United States'].PD).toBeGreaterThan(sub.Greece.PD)
+    expect(sub['Dominican Republic']).toEqual(sub.Philippines)
+    expect(sub['Italy'].PD).toBeGreaterThan(sub['Dominican Republic'].PD)
   })
 
   it('separates the leader, then re-ranks the two still level', () => {
     const order = rankGroup(TEAMS.A, board)
       .filter((r) => r.Pts === 5)
       .map((r) => r.name)
-    expect(order).toEqual(['United States', 'Greece', 'Dominican Republic'])
+    expect(order).toEqual(['Italy', 'Dominican Republic', 'Philippines'])
   })
 })
 
@@ -175,11 +175,11 @@ describe('placing-slot edges', () => {
 
   it('enumerates the orderings of a group with one game left', () => {
     const oneLeft = A([
-      ['United States', 'Nigeria', 90, 60],
-      ['Greece', 'Dominican Republic', 90, 60],
-      ['United States', 'Dominican Republic', 90, 60],
-      ['Nigeria', 'Greece', 60, 90],
-      ['Dominican Republic', 'Nigeria', 80, 70],
+      ['Italy', 'Angola', 90, 60],
+      ['Dominican Republic', 'Philippines', 90, 60],
+      ['Italy', 'Philippines', 90, 60],
+      ['Angola', 'Dominican Republic', 60, 90],
+      ['Philippines', 'Angola', 80, 70],
     ])
     const orders = reachableOrderings('A', oneLeft)
     expect(orders.size).toBeGreaterThan(1)

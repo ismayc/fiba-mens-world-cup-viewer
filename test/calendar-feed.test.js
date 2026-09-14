@@ -1,33 +1,32 @@
 // The Netlify calendar function: the auto-updating webcal:// subscription.
 //
-// The function has been re-pointed at the men's 2027 tournament (FEED window,
-// PRODID, UID, filename, headline filter). Its VENUE_ALIASES and
-// KNOWN_ESPN_TIME_BUGS are empty for now, because no men's ESPN capture exists to
-// derive sponsor-name or bad-time corrections from; the app adds them when the
-// 2027 feed is live. These tests exercise the function with self-contained
-// men's-shaped payloads.
+// The function is pointed at the 2023 men's tournament (FEED window, PRODID, UID,
+// filename, headline filter). Its VENUE_ALIASES and KNOWN_ESPN_TIME_BUGS are empty:
+// ESPN's fiba slug does not serve the completed 2023 event, so there is no capture
+// to derive sponsor-name or bad-time corrections from, and none ever will. These
+// tests exercise the function with self-contained payloads shaped like ESPN's.
 //
 // PARENT NOTE: with VENUE_ALIASES = {} and KNOWN_ESPN_TIME_BUGS = {}, the
 // `ALIASES[x] || x` and `BUGS[id] || date` expressions can never take their
-// left-hand (alias-hit / bug-hit) branch, so branch coverage of those two lines
-// is unreachable from any test. Add a placeholder entry or a /* v8 ignore */ once
-// the 2027 feed shape is known, or the 100% gate will flag them.
+// left-hand (alias-hit / bug-hit) branch, so those two lines carry a
+// /* v8 ignore next */ in calendar.js: the correction maps are permanently empty
+// because ESPN does not serve this event.
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { handler, parseScoreboard } from '../netlify/functions/calendar.js'
 
-const HEAD = "FIBA Men's World Cup - Group A"
+const HEAD = "FIBA Men's World Cup - Group C"
 const comp = (over = {}) => ({
   notes: [{ headline: HEAD }],
   status: { type: {} },
-  venue: { fullName: 'Lusail Sports Arena', address: { city: 'Lusail' } },
+  venue: { fullName: 'Mall of Asia Arena', address: { city: 'Pasay' } },
   competitors: [
-    { homeAway: 'home', score: '70', team: { displayName: 'Nigeria' } },
+    { homeAway: 'home', score: '70', team: { displayName: 'Greece' } },
     { homeAway: 'away', score: '80', team: { displayName: 'United States' } },
   ],
   ...over,
 })
-const wrap = (competitions) => ({ events: [{ id: 'x', date: '2027-08-27T11:00Z', competitions }] })
+const wrap = (competitions) => ({ events: [{ id: 'x', date: '2023-08-26T12:40Z', competitions }] })
 
 beforeEach(() => {
   global.fetch = vi.fn(async () => ({ ok: true, json: async () => wrap([comp()]) }))
@@ -37,8 +36,8 @@ describe('parseScoreboard', () => {
   it('reads a game of this tournament, away-first', () => {
     const [g] = parseScoreboard(wrap([comp()]))
     expect(g.away).toBe('United States')
-    expect(g.home).toBe('Nigeria')
-    expect(g.round).toBe('Group A')
+    expect(g.home).toBe('Greece')
+    expect(g.round).toBe('Group C')
   })
 
   it('keeps only games whose headline names a FIBA World Cup', () => {
@@ -46,14 +45,14 @@ describe('parseScoreboard', () => {
     expect(parseScoreboard(wrap([comp(), other]))).toHaveLength(1)
   })
 
-  it('passes the arena name through (no sponsor aliases yet)', () => {
-    const [g] = parseScoreboard(wrap([comp({ venue: { fullName: 'Lusail Sports Arena', address: { city: 'Lusail' } } })]))
-    expect(g.venue).toBe('Lusail Sports Arena, Lusail')
+  it('passes the arena name through (no sponsor aliases)', () => {
+    const [g] = parseScoreboard(wrap([comp({ venue: { fullName: 'Mall of Asia Arena', address: { city: 'Pasay' } } })]))
+    expect(g.venue).toBe('Mall of Asia Arena, Pasay')
   })
 
-  it('uses ESPN’s own tip-off time (no committed corrections yet)', () => {
+  it('uses ESPN’s own tip-off time (no committed corrections)', () => {
     const [g] = parseScoreboard(wrap([comp()]))
-    expect(g.start.toISOString()).toBe('2027-08-27T11:00:00.000Z')
+    expect(g.start.toISOString()).toBe('2023-08-26T12:40:00.000Z')
   })
 
   it('shows no score for a game that has not been played', () => {
@@ -63,7 +62,7 @@ describe('parseScoreboard', () => {
   it('shows the score, and overtime, once a game is complete', () => {
     const [g] = parseScoreboard(
       wrap([comp({ status: { period: 6, type: { completed: true } }, competitors: [
-        { homeAway: 'home', score: '92', team: { displayName: 'Nigeria' } },
+        { homeAway: 'home', score: '92', team: { displayName: 'Greece' } },
         { homeAway: 'away', score: '95', team: { displayName: 'United States' } },
       ] })]),
     )
@@ -106,7 +105,7 @@ describe('malformed upstream payloads', () => {
 
   it('leaves the location blank rather than throwing when the venue is missing', () => {
     expect(parseScoreboard(wrap([comp({ venue: undefined })]))[0].venue).toBe('')
-    expect(parseScoreboard(wrap([comp({ venue: { fullName: 'Lusail Sports Arena' } })]))[0].venue).toBe('Lusail Sports Arena')
+    expect(parseScoreboard(wrap([comp({ venue: { fullName: 'Mall of Asia Arena' } })]))[0].venue).toBe('Mall of Asia Arena')
   })
 
   it('treats a competitor with no team as unnamed rather than crashing', () => {
@@ -123,7 +122,7 @@ describe('malformed upstream payloads', () => {
   it('shows no score when a completed game reports an empty one', () => {
     const [g] = parseScoreboard(
       wrap([comp({ status: { period: 4, type: { completed: true } }, competitors: [
-        { homeAway: 'home', score: '', team: { displayName: 'Nigeria' } },
+        { homeAway: 'home', score: '', team: { displayName: 'Greece' } },
         { homeAway: 'away', score: '80', team: { displayName: 'United States' } },
       ] })]),
     )
@@ -146,8 +145,8 @@ describe('handler', () => {
     const res = await handler({ queryStringParameters: {} })
     expect(res.statusCode).toBe(200)
     expect(res.headers['Content-Type']).toMatch(/text\/calendar/)
-    expect(res.body).toContain("X-WR-CALNAME:FIBA Men's World Cup 2027")
-    expect(res.body).toContain("PRODID:-//FIBA Men's World Cup 2027 Viewer//EN")
+    expect(res.body).toContain("X-WR-CALNAME:FIBA Men's World Cup 2023")
+    expect(res.body).toContain("PRODID:-//FIBA Men's World Cup 2023 Viewer//EN")
     expect(res.body.match(/BEGIN:VEVENT/g)).toHaveLength(1)
     expect(res.body).not.toMatch(/Women/)
   })
@@ -176,11 +175,11 @@ describe('handler', () => {
 })
 
 describe('the feed URL', () => {
-  it('uses site.web.api on the men’s 2027 window', async () => {
+  it('uses site.web.api on the 2023 window', async () => {
     await handler({ queryStringParameters: {} })
     const url = global.fetch.mock.calls[0][0]
     expect(url).toContain('site.web.api.espn.com')
     expect(url).toContain('basketball/fiba')
-    expect(url).toContain('dates=20270827-20270912')
+    expect(url).toContain('dates=20230825-20230910')
   })
 })

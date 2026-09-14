@@ -1,13 +1,13 @@
-# FIBA Men's World Cup 2027 Schedule Viewer
+# FIBA Men's World Cup 2023 Schedule Viewer
 
 [![CI](https://github.com/ismayc/fiba-mens-world-cup-viewer/actions/workflows/ci.yml/badge.svg)](https://github.com/ismayc/fiba-mens-world-cup-viewer/actions/workflows/ci.yml)
 [![coverage](https://img.shields.io/endpoint?url=https://ismayc.github.io/fiba-mens-world-cup-viewer/coverage.json)](https://github.com/ismayc/fiba-mens-world-cup-viewer/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
-A React + Vite web app for the FIBA Men's Basketball World Cup 2027 in Doha,
-Qatar, showing all 92 games in **your** timezone, with the two group stages, group
-standings, the knockout bracket, and the full FIBA tie-breaker and qualification
-math.
+A React + Vite web app for the 2023 FIBA Men's Basketball World Cup, co-hosted by
+the Philippines, Japan and Indonesia, showing all 92 games in **your** timezone,
+with the two group stages, group standings, the knockout bracket, and the full FIBA
+tie-breaker and qualification math.
 
 🔗 **Live:** https://ismayc.github.io/fiba-mens-world-cup-viewer/ · https://fiba-mens-world-cup-viewer.netlify.app
 
@@ -16,16 +16,18 @@ at. Netlify is the mirror that keeps deploying when GitHub Actions is down, and 
 is also the only host that can serve `/calendar.ics`, since that feed is a Netlify
 function.
 
-## The draw has not happened yet
+## The real, completed tournament
 
-As of late 2026 only **Qatar** (host) and **Türkiye** have qualified; the other 30
-places are still in qualifying, and the draw that seeds the eight first-round
-groups is not held until spring 2027. So the app ships a **placeholder** tournament:
-an illustrative 32-team field drawn into groups, and a complete 92-game schedule
-with Doha-metro venues and plausible tip-off times, so the format can be explored
-now. Every screen is labeled as provisional. When FIBA publishes the real draw and
-schedule, the team lists, fixtures and venues are replaced; the format engine does
-not change.
+This viewer carries the real 2023 tournament: all 92 games with the teams, scores,
+dates and venues that actually happened, verified against Wikipedia's own group and
+knockout tables. Germany won it, beating Serbia in the final; Canada took bronze
+past the United States. It was co-hosted by the Philippines, Japan and Indonesia
+across five arenas in five cities, and ran 25 August to 10 September 2023.
+
+Building the real tournament uncovered **two bugs in the format engine** that the
+earlier synthetic placeholder could never have shown, because the placeholder's
+tests were self-consistent with the wrong engine. See "Notes for contributors"
+below.
 
 ## The format, and why it shapes the app
 
@@ -34,12 +36,13 @@ not change.
 - **First round:** eight groups (A-H) of four, round-robin. The **top two of each
   group advance**; the bottom two drop to the 17th-32nd classification.
 - **Second round:** four groups (I-L) of four, formed by merging pairs of
-  first-round groups (**A&B → I, C&D → J, E&F → K, G&H → L**). The two
-  co-qualifiers' first-round game **carries over** and counts again, so each team
-  plays only two new games and a second-round group is a four-team round-robin whose
-  six games span two rounds. The **top two of each advance** to the knockout.
+  first-round groups (**A&B → I, C&D → J, E&F → K, G&H → L**). Each qualifier
+  **carries its whole first-round record forward** (all three first-round games,
+  including those against the teams that did not advance) and plays two new games, so
+  a second-round table is a **five-game record**. The **top two of each advance** to
+  the knockout.
 - **Knockout:** a balanced eight-team bracket, quarter-finals to Final, plus a
-  third-place game. The second-round groups **cross I↔L and J↔K**, so a group's
+  third-place game. The second-round groups **cross I↔J and K↔L**, so a group's
   winner and runner-up can only meet again in the Final.
 
 **FIBA's points are not football's.** A win is 2 points and **a loss is 1**; only a
@@ -51,9 +54,9 @@ completeness but are not bracketed: the engine ranks the top 16 seriously.
 
 ## Features
 
-- **Your timezone** — tip-off times auto-convert to your detected timezone. Every
-  game is in the Doha metropolitan area, which is on Asia/Qatar (UTC+03:00) with no
-  daylight saving, so the tournament has one venue clock.
+- **Your timezone** — tip-off times auto-convert to your detected timezone. The
+  five arenas span three timezones (the Philippines at UTC+08:00, Okinawa at
+  UTC+09:00, Jakarta at UTC+07:00), and each game's clock comes from its own venue.
 - **Hover for home-country time** — hover a team to see when the game tips off back
   home; countries spanning several zones list each distinct local time.
 - **Follow teams** — star any team to highlight it everywhere and filter to a
@@ -82,22 +85,17 @@ completeness but are not bracketed: the engine ranks the top 16 seriously.
 
 ## Data
 
-Two sources, one authority:
-
-| Source | Owns |
-| --- | --- |
-| **FIBA's format** (frozen in `scripts/official.mjs`) | Structure: the group and bracket wiring, and (until the real draw) the placeholder field, fixtures and tip-off times. |
-| **ESPN's `basketball/fiba` scoreboard** | Event ids, arenas, and the score once a game is played (once the 2027 tournament is live). |
-
-The placeholder data is generated with:
+One frozen authority. `scripts/official.mjs` holds the real, completed 2023
+tournament: every team, group, score, date and venue, parsed from Wikipedia's
+per-group tables and cross-checked (the standings this data produces match
+Wikipedia's own group tables exactly, and the resolved bracket matches the real
+quarter-finals, semi-finals and final). ESPN's `basketball/fiba` slug is
+time-multiplexed and does not serve the 2023 event, so there is no live feed to
+overlay: this build is the whole pipeline.
 
 ```bash
 npm run build:data              # write src/data/{games,teams,venues}.js from official.mjs
 ```
-
-Once the real draw is published, `scripts/official.mjs` is filled with the real
-schedule and `npm run fetch:tournament` (the ESPN-overlay pipeline) takes over as
-the live builder.
 
 ## Develop
 
@@ -124,27 +122,32 @@ option.
 Things in this repo that exist to stop a specific bug coming back, and should not
 be "simplified":
 
-1. **The two-stage carryover in `src/utils/qualification.js` and
-   `src/utils/secondRound.js`.** A second-round group is ranked by the games played
-   *among its four members*, which is what picks up the carried-over first-round
-   game automatically. Do not reintroduce a stage filter that drops it.
-2. **The knockout crossover in `src/utils/bracket.js`.** I↔L and J↔K, verified
-   against the 2023 tournament and used as the default until FIBA publishes the 2027
-   bracket. Do not "tidy" it into a neater but wrong I-vs-J / K-vs-L.
+1. **The second-round carryover in `src/utils/qualification.js` and
+   `src/utils/secondRound.js`.** A second-round group is ranked over each member's
+   FULL five-game record (its whole first-round record, including games against
+   teams that did not advance, plus its two new second-round games), via
+   `carryoverGames`. It is NOT the games among the four members alone. FIBA's rule is
+   explicit ("all five group stage games counting"), and the 2023 data proves it:
+   ranking by the three among-member games flips Group I to Serbia > Italy, when the
+   real order is Italy > Serbia. Do not reintroduce the among-members-only model.
+2. **The knockout crossover in the game labels (`scripts/official.mjs`), read by
+   `src/utils/bracket.js`.** The second-round groups cross **I with J and K with L**
+   (QF: Winner I vs 2nd J, Winner J vs 2nd I, Winner K vs 2nd L, Winner L vs 2nd K).
+   This is the real 2023 wiring, verified: Italy (1st I) met the United States (2nd
+   J), Germany (1st K) met Latvia (2nd L). Do not "tidy" it into I with L / J with K.
 3. **`site.web.api.espn.com`, not `site.api.espn.com`.** The two serve identical
    routes, but `site.api` returns 403 to datacenter IPs, which is every CI runner
    and every Netlify function.
-4. **The placeholder labeling.** The draw is not real yet; the app says so
-   everywhere. Do not remove the provisional notes while the field is illustrative.
 
 ## Credits
 
 An unofficial fan-made project. Not affiliated with, endorsed by, or sponsored by
 FIBA. "FIBA Basketball World Cup", team, broadcaster and tournament names are
 trademarks of their respective owners. Schedule and results data compiled from
-[FIBA](https://www.fiba.basketball/) and [ESPN](https://www.espn.com/). The app
-icon (a basketball on the app's dark ground with a Qatar-maroon base) and the
-social card use [Google Noto Emoji](https://github.com/googlefonts/noto-emoji)
-(Apache License 2.0).
+[FIBA](https://www.fiba.basketball/) and
+[Wikipedia](https://en.wikipedia.org/wiki/2023_FIBA_Basketball_World_Cup). The app
+icon (a basketball on the app's dark ground with a maroon base) and the social card
+use [Google Noto Emoji](https://github.com/googlefonts/noto-emoji) (Apache License
+2.0).
 
 Created by [Chester Ismay](https://github.com/ismayc) · MIT licensed.

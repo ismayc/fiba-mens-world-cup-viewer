@@ -5,12 +5,9 @@
 // Needs ImageMagick 7 (`magick`) on PATH and the system Arial faces. Font paths
 // are macOS ones; on Linux point BOLD/REG at any grotesque you have.
 //
-// WHY THIS CARD DOES NOT SHOW THE DRAW. The women's sibling's card listed all
-// sixteen nations in their four groups. This edition's draw HAS NOT HAPPENED (only
-// Qatar and Türkiye have qualified as of late 2026), so there is no real field to
-// show; a placeholder grid on a share card would read as a real draw. The card is
-// therefore a clean summary of the tournament and the tool, with a plain note that
-// the draw is still to come.
+// The card is a clean summary of the 2023 tournament and the tool. It deliberately
+// does not name the champion: the viewer defaults to showing results, but a share
+// card is seen out of context, so it stays a neutral summary rather than a spoiler.
 //
 // WHY THE WORDING IS NOT IN THE SVG. Two ImageMagick limits force it:
 //   1. Its SVG renderer has NO FONT STACK. Any <text> element fails with "unable
@@ -46,17 +43,17 @@ function main() {
       layer,
       // Title + subtitle, to the right of the badge.
       '-font', BOLD, '-pointsize', '50', '-fill', '#ffffff',
-      '-annotate', '+200+118', 'FIBA Men’s World Cup 2027',
+      '-annotate', '+200+118', 'FIBA Men’s World Cup 2023',
       '-font', REG, '-pointsize', '27', '-fill', '#e56f88',
-      '-annotate', '+202+166', 'Schedule Viewer · Doha, Qatar',
+      '-annotate', '+202+166', 'Schedule Viewer · Philippines · Japan · Indonesia',
       // Three headline facts across the middle.
       '-font', BOLD, '-pointsize', '40', '-fill', '#ffffff',
       '-annotate', '+60+320', '32 teams   ·   92 games   ·   two group stages',
       '-font', REG, '-pointsize', '30', '-fill', '#a7adb8',
-      '-annotate', '+60+380', '27 August – 12 September 2027',
-      // The honest caveat.
+      '-annotate', '+60+380', '25 August – 10 September 2023',
+      // A neutral highlight (no champion named: a share card is seen out of context).
       '-font', BOLD, '-pointsize', '24', '-fill', '#e56f88',
-      '-annotate', '+60+452', 'Provisional — the 32-team draw is held in spring 2027',
+      '-annotate', '+60+452', 'Five arenas across three host countries',
       // Footer.
       '-font', REG, '-pointsize', '24', '-fill', '#a7adb8',
       '-annotate', '+60+606',

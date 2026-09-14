@@ -8,7 +8,7 @@ import { matchesSearch, parseQuery } from '../src/utils/search.js'
 import { venueFor } from '../src/utils/venue.js'
 
 const run = (query) => GAMES.filter((g) => matchesSearch(g, venueFor(g), parseQuery(query)))
-const G1 = GAMES[0] // United States v Nigeria, Lusail Sports Arena
+const G1 = GAMES[0] // Angola v Italy, Philippine Arena
 const V1 = venueFor(G1)
 
 describe('parseQuery', () => {
@@ -19,8 +19,8 @@ describe('parseQuery', () => {
   })
 
   it('splits scoped fields from leading free text', () => {
-    expect(parseQuery('lusail team: Serbia')).toEqual({
-      free: 'lusail',
+    expect(parseQuery('okinawa team: Serbia')).toEqual({
+      free: 'okinawa',
       tokens: [{ field: 'team', value: 'Serbia' }],
     })
   })
@@ -37,7 +37,7 @@ describe('parseQuery', () => {
       expect(parseQuery(`${key}: Serbia`).tokens[0].field).toBe('team')
     }
     for (const key of ['arena', 'stadium', 'venue', 'ground']) {
-      expect(parseQuery(`${key}: Lusail`).tokens[0].field).toBe('arena')
+      expect(parseQuery(`${key}: Okinawa`).tokens[0].field).toBe('arena')
     }
     for (const key of ['group', 'grp', 'g']) {
       expect(parseQuery(`${key}: A`).tokens[0].field).toBe('group')
@@ -46,7 +46,7 @@ describe('parseQuery', () => {
       expect(parseQuery(`${key}: final`).tokens[0].field).toBe('stage')
     }
     for (const key of ['country', 'host']) {
-      expect(parseQuery(`${key}: Qatar`).tokens[0].field).toBe('country')
+      expect(parseQuery(`${key}: Philippines`).tokens[0].field).toBe('country')
     }
   })
 
@@ -63,7 +63,7 @@ describe('parseQuery', () => {
 describe('scoped matching', () => {
   it('matches a team on either side', () => {
     expect(run('team: United States')).toHaveLength(3)
-    expect(run('team: Nigeria').every((g) => g.t1 === 'Nigeria' || g.t2 === 'Nigeria')).toBe(true)
+    expect(run('team: Angola').every((g) => g.t1 === 'Angola' || g.t2 === 'Angola')).toBe(true)
     expect(run('team: Narnia')).toHaveLength(0)
   })
 
@@ -74,14 +74,14 @@ describe('scoped matching', () => {
   })
 
   it('matches the city and the country', () => {
-    expect(run('country: Qatar')).toHaveLength(GAMES.length)
-    expect(run('city: Lusail').length).toBeGreaterThan(0)
+    expect(run('country: Philippines')).toHaveLength(52)
+    expect(run('city: Pasay').length).toBeGreaterThan(0)
     expect(run('city: Sydney')).toHaveLength(0)
   })
 
   it('matches an arena by name', () => {
-    expect(run('arena: Lusail').length).toBeGreaterThan(0)
-    expect(run('arena: Al Attiyah').length).toBeGreaterThan(0)
+    expect(run('arena: Mall of Asia').length).toBeGreaterThan(0)
+    expect(run('arena: Okinawa').length).toBeGreaterThan(0)
     expect(run('arena: Wembley')).toHaveLength(0)
   })
 
@@ -123,16 +123,16 @@ describe('scoped matching', () => {
   })
 
   it('combines scoped fields with AND', () => {
-    expect(run('team: United States group: A')).toHaveLength(3)
-    expect(run('team: United States group: B')).toHaveLength(0)
+    expect(run('team: United States group: C')).toHaveLength(3)
+    expect(run('team: United States group: A')).toHaveLength(0)
   })
 })
 
 describe('free-text matching', () => {
   it('searches teams, arena, city, country, group and stage', () => {
-    expect(matchesSearch(G1, V1, parseQuery('united states'))).toBe(true)
-    expect(matchesSearch(G1, V1, parseQuery('lusail'))).toBe(true)
-    expect(matchesSearch(G1, V1, parseQuery('qatar'))).toBe(true)
+    expect(matchesSearch(G1, V1, parseQuery('angola'))).toBe(true)
+    expect(matchesSearch(G1, V1, parseQuery('bocaue'))).toBe(true)
+    expect(matchesSearch(G1, V1, parseQuery('philippines'))).toBe(true)
     expect(matchesSearch(G1, V1, parseQuery('group a'))).toBe(true)
     expect(matchesSearch(G1, V1, parseQuery('first round'))).toBe(true)
     expect(matchesSearch(G1, V1, parseQuery('australia'))).toBe(false)

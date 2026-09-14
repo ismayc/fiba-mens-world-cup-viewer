@@ -30,7 +30,7 @@ const mockFeed = (payload) => (global.fetch = vi.fn(async () => ({ ok: true, jso
 // A fixture as ESPN publishes it on the day, under an id we have never committed.
 // `away` is FIBA's first-named side, the orientation every committed record uses.
 function liveEvent(away, home, score, id = '401999001', state = 'in') {
-  const date = '2027-09-03T14:00Z'
+  const date = '2023-09-01T10:00Z'
   const status = {
     period: state === 'pre' ? 0 : 3,
     displayClock: '4:12',
@@ -62,9 +62,9 @@ function liveEvent(away, home, score, id = '401999001', state = 'in') {
   }
 }
 
-// The second round is played in early September; pin the clock mid-second-round so
-// the App test's day section is not collapsed as past.
-const DURING_R2 = new Date('2027-09-03T13:00:00Z')
+// The second round is played September 1 and 3, 2023; pin the clock during the
+// first second-round day so the App test's day section is not collapsed as past.
+const DURING_R2 = new Date('2023-09-01T09:00:00Z')
 
 beforeEach(() => pinClock(DURING_R2))
 afterEach(() => {
@@ -74,10 +74,10 @@ afterEach(() => {
 
 describe('unclaimedLive', () => {
   it('drops every record a committed game already owns by id', async () => {
-    const g1 = num(GAMES, 1) // United States v Nigeria, committed id 401300001
+    const g1 = num(GAMES, 1) // Angola v Italy, committed id 401300001
     mockFeed(espnScoreboard([g1], { 1: { state: 'post', score: [88, 61] } }))
     const live = await fetchLive()
-    const pk = pairKey('United States', 'Nigeria')
+    const pk = pairKey('Angola', 'Italy')
     expect(live.get(pk)).toBeTruthy()
     const filtered = unclaimedLive(live, GAMES)
     expect(filtered.get(pk)).toBeUndefined()
@@ -106,13 +106,13 @@ describe('unclaimedLive', () => {
 describe('the second overlay pass', () => {
   it('scores a resolved second-round game whose ESPN id differs from the committed one', async () => {
     const board = playStage('R1') // real first-round results
-    mockFeed({ events: [liveEvent('United States', 'Serbia', [80, 74])] })
+    mockFeed({ events: [liveEvent('Serbia', 'Dominican Republic', [80, 74])] })
     const live = await fetchLive()
 
     const resolved = resolveBracket(board)
     const before = num(resolved, 49)
-    expect(before.t1).toBe('United States')
-    expect(before.t2).toBe('Serbia')
+    expect(before.t1).toBe('Serbia')
+    expect(before.t2).toBe('Dominican Republic')
     // The first pass cannot match it: the live record's id is not our committed
     // one, and the unresolved committed board has no pair for it.
     expect(applyLive(board, live).find((g) => g.num === 49).score).toBeUndefined()
@@ -125,20 +125,20 @@ describe('the second overlay pass', () => {
   })
 
   it('does not let a group meeting supply a knockout slot with the same pair', async () => {
-    // United States v Nigeria is game 1 and carries a committed id. If a later
+    // Angola v Italy is game 1 and carries a committed id. If a later
     // round ever pairs them again, the knockout slot must stay unscored rather
     // than adopt the group result, because `pairKey` is not scoped to a date.
     const board = playStage('R1')
     mockFeed(espnScoreboard([num(GAMES, 1)], { 1: { state: 'post', score: [88, 61] } }))
     const live = await fetchLive()
     const resolved = resolveBracket(board).map((g) =>
-      g.num === 89 ? { ...g, t1: 'United States', t2: 'Nigeria' } : g,
+      g.num === 89 ? { ...g, t1: 'Angola', t2: 'Italy' } : g,
     )
     const after = num(applyLive(resolved, unclaimedLive(live, GAMES)), 89)
     expect(after.score).toBeUndefined()
     // The group game itself keeps its committed result: a committed score always
     // wins over the feed.
-    expect(num(applyLive(resolved, live), 1).score).toEqual([90, 70])
+    expect(num(applyLive(resolved, live), 1).score).toEqual([70, 90])
   })
 })
 
@@ -146,7 +146,7 @@ describe('the app', () => {
   it('shows a live second-round score without waiting for a refresh', async () => {
     const played = playStage('R1')
     mockFeed({
-      events: [...espnScoreboard(played).events, liveEvent('United States', 'Serbia', [80, 74])],
+      events: [...espnScoreboard(played).events, liveEvent('Serbia', 'Dominican Republic', [80, 74])],
     })
     render(
       <FollowProvider>
@@ -159,9 +159,9 @@ describe('the app', () => {
     await waitFor(() => {
       const cards = [...document.querySelectorAll('.card')]
       const r2 = cards.find(
-        (c) => c.textContent.includes('United States') && c.textContent.includes('Serbia'),
+        (c) => c.textContent.includes('Serbia') && c.textContent.includes('Dominican Republic'),
       )
-      expect(r2, 'no card for the resolved United States v Serbia second-round game').toBeTruthy()
+      expect(r2, 'no card for the resolved Serbia v Dominican Republic second-round game').toBeTruthy()
       expect(r2.querySelector('.score')?.textContent).toMatch(/80.*74/)
     })
   })

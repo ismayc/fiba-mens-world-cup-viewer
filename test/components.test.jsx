@@ -34,14 +34,14 @@ function wrap(ui, { onDetail = () => {} } = {}) {
   )
 }
 
-// A complete first-round Group A (United States, Greece, Dominican Republic, Nigeria).
+// A complete first-round Group A (Dominican Republic, Italy, Angola, Philippines).
 const DECISIVE = [
-  ['United States', 'Greece', 90, 60],
-  ['United States', 'Dominican Republic', 90, 60],
-  ['United States', 'Nigeria', 90, 60],
-  ['Greece', 'Dominican Republic', 80, 70],
-  ['Greece', 'Nigeria', 80, 70],
-  ['Dominican Republic', 'Nigeria', 75, 70],
+  ['Dominican Republic', 'Italy', 90, 60],
+  ['Dominican Republic', 'Angola', 90, 60],
+  ['Dominican Republic', 'Philippines', 90, 60],
+  ['Italy', 'Angola', 80, 70],
+  ['Italy', 'Philippines', 80, 70],
+  ['Angola', 'Philippines', 75, 70],
 ]
 
 describe('Standings', () => {
@@ -72,7 +72,7 @@ describe('Standings', () => {
   it('shows FIBA points and a W–L record once games are played', () => {
     const board = withGroupScores('A', DECISIVE, GAMES)
     wrap(<Standings matches={board} tz={TZ} clinch={computeClinch(board)} />)
-    const row = screen.getByRole('row', { name: /United States/ })
+    const row = screen.getByRole('row', { name: /Dominican Republic/ })
     const cells = within(row).getAllByRole('cell').map((td) => td.textContent)
     // P, W, L: 3 played, 3 wins, 0 losses; 6 FIBA points.
     expect(cells.slice(1, 4)).toEqual(['3', '3', '0'])
@@ -116,10 +116,10 @@ describe('Bracket', () => {
 
   it('shows the quarter-final crossover', () => {
     wrap(<Bracket matches={board} tz={TZ} />)
-    // Game 85 is Winner Group I against 2nd Group L (the I<->L crossover).
+    // Game 85 is Winner Group I against 2nd Group J (the I<->J crossover).
     const g85 = document.getElementById('bx-m85')
     expect(within(g85).getByText('Winner Group I')).toBeInTheDocument()
-    expect(within(g85).getByText('2nd Group L')).toBeInTheDocument()
+    expect(within(g85).getByText('2nd Group J')).toBeInTheDocument()
   })
 
   it('opens the detail modal when a game is clicked', () => {
@@ -147,9 +147,9 @@ describe('MatchCard', () => {
 
   it('renders a first-round game with its arena and game number', () => {
     wrap(<MatchCard match={num(GAMES, 1)} tz={TZ} byNum={byNum} slotMap={slotMap} />)
-    expect(screen.getByText('United States')).toBeInTheDocument()
-    expect(screen.getByText('Nigeria')).toBeInTheDocument()
-    expect(screen.getByText('Lusail Sports Arena')).toBeInTheDocument()
+    expect(screen.getByText('Angola')).toBeInTheDocument()
+    expect(screen.getByText('Italy')).toBeInTheDocument()
+    expect(screen.getByText('Philippine Arena')).toBeInTheDocument()
     expect(screen.getByText('Game 1')).toBeInTheDocument()
   })
 
@@ -216,7 +216,7 @@ describe('MatchDetail', () => {
 
   it('shows the arena and the US broadcast, with no Spanish row', () => {
     wrap(<MatchDetail match={num(GAMES, 1)} tz={TZ} allMatches={GAMES} onClose={() => {}} />)
-    expect(screen.getByText(/Lusail Sports Arena/)).toBeInTheDocument()
+    expect(screen.getByText(/Philippine Arena/)).toBeInTheDocument()
     expect(screen.getByText('How to watch (US)')).toBeInTheDocument()
     expect(screen.queryByText('Spanish')).not.toBeInTheDocument()
   })

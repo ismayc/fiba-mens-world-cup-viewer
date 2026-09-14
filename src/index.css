@@ -32,7 +32,7 @@
   --text-dim: #a7adb8;
   --text-faint: #767d89;
 
-  /* Qatar maroon, the one accent, spent on NOW: live, next up, the selected view,
+  /* The maroon accent, spent, spent on NOW: live, next up, the selected view,
      the thing the eye should land on first. This viewer's own accent, distinct
      from the women's edition's orange so the two read as different apps in the
      family. Paired with white --accent-ink (4.9:1 on the fill for bold type)
@@ -184,24 +184,6 @@ body {
   font-weight: 600;
 }
 
-/* The placeholder-draw banner: the 2027 field is not drawn yet, so the app must
-   say so plainly wherever it is opened. A quiet-accent hairline strip, not a
-   dismissible toast, because it qualifies everything below it. */
-.provisional-note {
-  margin: 10px 16px 0;
-  padding: 10px 14px;
-  border: 1px solid var(--accent);
-  border-left-width: 4px;
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--accent) 10%, var(--card));
-  color: var(--text);
-  font-size: 0.82rem;
-  line-height: 1.45;
-}
-.provisional-note strong { font-weight: 700; }
-@media (min-width: 720px) {
-  .provisional-note { margin-inline: 24px; }
-}
 
 /* ---------- Controls bar (collapsed filters) ---------- */
 .controls-bar {

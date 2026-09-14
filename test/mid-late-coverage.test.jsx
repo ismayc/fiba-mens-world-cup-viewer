@@ -22,7 +22,7 @@ import { resolveBracket } from '../src/utils/bracketResolve.js'
 import { gamesByNum } from '../src/utils/bracket.js'
 import { playStage, pinClock } from './helpers/tournament.js'
 
-const TZ = 'Asia/Qatar'
+const TZ = 'Asia/Manila'
 const num = (n) => GAMES.find((g) => g.num === n)
 
 function wrap(ui, { onDetail = () => {} } = {}) {
@@ -87,7 +87,7 @@ describe('MatchDetail broadcast note', () => {
   it('renders no tale of the tape when a knockout side has not played', () => {
     // A quarter-final with real teams but an empty history: neither has a record,
     // so the tape renders nothing rather than an empty table.
-    const qf = { num: 85, stage: 'QF', t1: 'United States', t2: 'Spain', ko: '2027-09-08T14:00:00+03:00', venue: 'lusail', tv: [] }
+    const qf = { num: 85, stage: 'QF', t1: 'United States', t2: 'Spain', ko: '2023-09-05T20:40:00+08:00', venue: 'moa', tv: [] }
     wrap(<MatchDetail match={qf} tz={TZ} allMatches={[]} hideScores={false} onClose={() => {}} />)
     expect(screen.queryByText(/Tournament so far/)).toBeNull()
   })
@@ -95,9 +95,9 @@ describe('MatchDetail broadcast note', () => {
   it('renders the tale of the tape once both knockout sides have played', () => {
     // Both teams have first-round records, so the tape renders their form. One
     // side (United States) carries a positive point difference and the other
-    // (Nigeria, bottom of its group) a negative one, so both signs are formatted.
+    // (Jordan, bottom of its group) a negative one, so both signs are formatted.
     const played = playStage('R1', GAMES)
-    const qf = { num: 85, stage: 'QF', t1: 'United States', t2: 'Nigeria', ko: '2027-09-08T14:00:00+03:00', venue: 'lusail', tv: [] }
+    const qf = { num: 85, stage: 'QF', t1: 'United States', t2: 'Jordan', ko: '2023-09-05T20:40:00+08:00', venue: 'moa', tv: [] }
     wrap(<MatchDetail match={qf} tz={TZ} allMatches={played} hideScores={false} onClose={() => {}} />)
     expect(screen.getByText(/Tournament so far/)).toBeTruthy()
   })
@@ -127,7 +127,7 @@ describe('a to-be-confirmed tip-off renders as TBC, never the epoch', () => {
   })
 
   it('in the week view', () => {
-    pinClock(new Date('2027-09-12T09:00:00+03:00'))
+    pinClock(new Date('2023-09-10T09:00:00+08:00'))
     const board = tbc(92)
     wrap(<WeekView allMatches={board} shown={board} tz={TZ} dayHidden={() => false} />)
     expect(document.body.textContent).toMatch(/TBC/)
@@ -136,7 +136,7 @@ describe('a to-be-confirmed tip-off renders as TBC, never the epoch', () => {
 
   it('in the day pop-up', () => {
     const g = { ...num(92), ko: null, tbdTip: true }
-    wrap(<DayMatchesModal matches={[g]} dayKey="2027-09-12" tz={TZ} byNum={gamesByNum(GAMES)} onClose={() => {}} />)
+    wrap(<DayMatchesModal matches={[g]} dayKey="2023-09-10" tz={TZ} byNum={gamesByNum(GAMES)} onClose={() => {}} />)
     expect(document.body.textContent).toMatch(/TBC/)
   })
 })
@@ -152,7 +152,12 @@ describe('WeekView with today outside the tournament', () => {
 
 describe('App interactions that need a live DOM', () => {
   beforeEach(() => {
-    pinClock()
+    // App reads the real, completed 2023 board, so every group and knockout stage
+    // is archived out of the Schedule and only the third-place game and Final (both
+    // on September 10) remain on the page. Pin the clock to the afternoon of the
+    // Final's day so the "next game" is the third-place game, whose day section is
+    // still rendered for jumpTo to scroll to.
+    pinClock(new Date('2023-09-10T15:00:00+08:00'))
     global.fetch = vi.fn(async () => ({ ok: true, json: async () => ({ events: [] }) }))
   })
   afterEach(() => vi.useRealTimers())

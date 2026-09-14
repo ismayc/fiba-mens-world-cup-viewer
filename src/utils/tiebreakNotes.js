@@ -12,7 +12,7 @@
 // lots. FIBA has no conduct criterion at all, so that branch is absent rather
 // than ported and left permanently unreachable.
 
-import { rankGroup, headToHead, byLots } from './qualification.js'
+import { rankGroup, headToHead, byLots, gamesAmong } from './qualification.js'
 
 // Within a points-level block, mark adjacent pairs that nothing could separate.
 function markBlock(tied, games, notes) {
@@ -54,9 +54,11 @@ function markBlock(tied, games, notes) {
 // Map of team name -> { reason: 'lots', vs: otherTeamName } for any team
 // separated from an adjacent team only by the drawing of lots. `members` is the
 // group's team objects (TEAMS[key] for a first-round group, or the resolved
-// membership for a second-round group), so this serves both stages.
-export function softTiebreaks(members, games) {
-  const rows = rankGroup(members, games)
+// membership for a second-round group), and `collect` selects the record set:
+// gamesAmong (default) for a first-round group, carryoverGames for a second-round
+// group, so this serves both stages with the correct carryover model.
+export function softTiebreaks(members, games, collect = gamesAmong) {
+  const rows = rankGroup(members, games, collect)
   const notes = new Map()
   let i = 0
   while (i < rows.length) {

@@ -44,39 +44,39 @@ import { LEAGUE } from '../src/config/league.js'
 import { withGroupScores } from './helpers/tournament.js'
 
 const num = (n) => GAMES.find((g) => g.num === n)
-const G1 = num(1) // United States v Nigeria, 2027-08-27 14:00 +03:00, Lusail
+const G1 = num(1) // Angola v Italy, 2023-08-25 16:00 +08:00, Philippine Arena
 // A synthetic time-to-be-confirmed game, for the branches the men's board (which
 // has a tip on every game) does not exercise on its own.
-const TBC = { ...num(85), ko: null, tbdTip: true, date: '2027-09-08' }
+const TBC = { ...num(85), ko: null, tbdTip: true, date: '2023-09-08' }
 
 describe('time', () => {
   it('formats a tip-off into any timezone', () => {
-    expect(formatTime(G1.ko, 'Asia/Qatar')).toBe('2:00 PM')
-    expect(formatTime(G1.ko, 'UTC')).toBe('11:00 AM')
-    expect(formatTime(G1.ko, 'America/New_York')).toBe('7:00 AM')
+    expect(formatTime(G1.ko, 'Asia/Manila')).toBe('4:00 PM')
+    expect(formatTime(G1.ko, 'UTC')).toBe('8:00 AM')
+    expect(formatTime(G1.ko, 'America/New_York')).toBe('4:00 AM')
   })
 
   it('names the day and the zone', () => {
-    expect(formatDateLong(G1.ko, 'Asia/Qatar')).toContain('August 27, 2027')
-    expect(dayKey(G1.ko, 'Asia/Qatar')).toBe('2027-08-27')
+    expect(formatDateLong(G1.ko, 'Asia/Manila')).toContain('August 25, 2023')
+    expect(dayKey(G1.ko, 'Asia/Manila')).toBe('2023-08-25')
     expect(tzAbbrev(G1.ko, 'UTC')).toBeTruthy()
   })
 
   it('buckets a TBC game on its committed date, not the epoch', () => {
     expect(TBC.ko).toBeNull()
-    expect(gameDayKey(TBC, 'UTC')).toBe('2027-09-08')
+    expect(gameDayKey(TBC, 'UTC')).toBe('2023-09-08')
     expect(gameDayKey(TBC, 'UTC')).not.toBe('1970-01-01')
-    expect(gameDayKey(G1, 'Asia/Qatar')).toBe('2027-08-27')
+    expect(gameDayKey(G1, 'Asia/Manila')).toBe('2023-08-25')
     // A game with neither a tip-off nor a committed date has no day at all.
     expect(gameDayKey({ ko: null, date: null }, 'UTC')).toBeNull()
   })
 
   it('names a calendar day from its key, with or without the year', () => {
-    const long = formatDayKeyLong('2027-09-08')
-    expect(long).toContain('September 8, 2027')
+    const long = formatDayKeyLong('2023-09-08')
+    expect(long).toContain('September 8, 2023')
     expect(long).toMatch(/^[A-Z][a-z]+,/) // opens with a weekday
-    expect(formatDayKeyLong('2027-09-08', { year: false })).toContain('September 8')
-    expect(formatDayKeyLong('2027-09-08', { year: false })).not.toContain('2027')
+    expect(formatDayKeyLong('2023-09-08', { year: false })).toContain('September 8')
+    expect(formatDayKeyLong('2023-09-08', { year: false })).not.toContain('2023')
     expect(formatDayKeyLong(null)).toBe('')
   })
 
@@ -121,8 +121,8 @@ describe('time', () => {
   })
 
   it('shows a tip-off in each competing nation’s own clock', () => {
-    expect(teamLocalKickoffs(G1.ko, 'Nigeria')).toHaveLength(1)
-    expect(teamKickoffTooltip(G1.ko, 'Nigeria')).toMatch(/^Tip-off in Nigeria:/)
+    expect(teamLocalKickoffs(G1.ko, 'Italy')).toHaveLength(1)
+    expect(teamKickoffTooltip(G1.ko, 'Italy')).toMatch(/^Tip-off in Italy:/)
     // The United States spans four zones, so it yields several distinct lines.
     expect(teamLocalKickoffs(G1.ko, 'United States').length).toBeGreaterThan(1)
     expect(teamKickoffTooltip(G1.ko, 'United States')).toMatch(/local times/)
@@ -174,14 +174,14 @@ describe('time', () => {
 
 describe('venue fallback', () => {
   it('resolves a real arena', () => {
-    expect(venueFor(G1).name).toBe('Lusail Sports Arena')
+    expect(venueFor(G1).name).toBe('Philippine Arena')
   })
 
-  it('falls back to a Doha placeholder rather than crashing', () => {
+  it('falls back to a Manila placeholder rather than crashing', () => {
     const v = venueFor({ venue: undefined })
     expect(v).toBe(TBC_VENUE)
     expect(v.city).toBe(LEAGUE.host.city)
-    expect(v.tz).toBe('Asia/Qatar')
+    expect(v.tz).toBe('Asia/Manila')
     expect(v.tbc).toBe(true)
     expect(venueFor(undefined)).toBe(TBC_VENUE)
   })
@@ -191,15 +191,15 @@ describe('team records', () => {
   const played = withGroupScores(
     'A',
     [
-      ['United States', 'Nigeria', 90, 60], // 27 Aug, US win by 30
-      ['United States', 'Dominican Republic', 70, 75], // 29 Aug, US loss
-      ['Greece', 'United States', 70, 80], // 31 Aug, US win
+      ['Dominican Republic', 'Philippines', 90, 60], // 25 Aug, DomRep win by 30
+      ['Dominican Republic', 'Italy', 70, 75], // 27 Aug, DomRep loss
+      ['Dominican Republic', 'Angola', 80, 70], // 29 Aug, DomRep win
     ],
     GAMES,
   )
 
   it('counts W–L with no draw column', () => {
-    const r = teamRecord(played, 'United States')
+    const r = teamRecord(played, 'Dominican Republic')
     expect(r).not.toHaveProperty('d')
     expect(r.w).toBe(2)
     expect(r.l).toBe(1)
@@ -209,15 +209,15 @@ describe('team records', () => {
   })
 
   it('tracks overtime games instead of shootouts', () => {
-    const ot = played.map((g) => (g.num === 1 ? { ...g, ot: 1 } : g))
-    expect(teamRecord(ot, 'United States').otWins).toBe(1)
-    expect(teamRecord(ot, 'Nigeria').otLosses).toBe(1)
+    const ot = played.map((g) => (g.num === 5 ? { ...g, ot: 1 } : g))
+    expect(teamRecord(ot, 'Dominican Republic').otWins).toBe(1)
+    expect(teamRecord(ot, 'Philippines').otLosses).toBe(1)
     expect(overtimeGames(ot)).toHaveLength(1)
   })
 
   it('reports the biggest win and a non-empty current run', () => {
-    const r = teamRecord(played, 'United States')
-    expect(r.biggestWin).toMatchObject({ margin: 30, opponent: 'Nigeria' })
+    const r = teamRecord(played, 'Dominican Republic')
+    expect(r.biggestWin).toMatchObject({ margin: 30, opponent: 'Philippines' })
     expect([1, -1, 2]).toContain(r.streak)
   })
 
@@ -250,14 +250,14 @@ describe('team records', () => {
   })
 
   it('limits the record to games that tipped off earlier', () => {
-    const r = teamRecord(played, 'United States', { before: '2027-08-28T00:00:00+03:00' })
-    expect(r.played).toBe(1) // only the 27 August game
+    const r = teamRecord(played, 'Dominican Republic', { before: '2023-08-26T00:00:00+08:00' })
+    expect(r.played).toBe(1) // only the 25 August game
     expect(r.w).toBe(1)
   })
 
   it('ignores a level score rather than counting it as a draw', () => {
-    const bad = withGroupScores('A', [['United States', 'Nigeria', 70, 70]], GAMES)
-    expect(teamRecord(bad, 'United States').played).toBe(0)
+    const bad = withGroupScores('A', [['Dominican Republic', 'Philippines', 70, 70]], GAMES)
+    expect(teamRecord(bad, 'Dominican Republic').played).toBe(0)
   })
 
   it('lists the teams still involved, ignoring voided games', () => {
@@ -305,7 +305,7 @@ describe('team records', () => {
 })
 
 describe('result notifications', () => {
-  const finalGame = { num: 1, t1: 'United States', t2: 'Nigeria', score: [88, 61], liveSource: true }
+  const finalGame = { num: 1, t1: 'United States', t2: 'Canada', score: [88, 61], liveSource: true }
 
   it('recognizes a finished, live-ish, in-scope game', () => {
     expect(isFinal(finalGame)).toBe(true)
@@ -341,7 +341,7 @@ describe('result notifications', () => {
   })
 
   it('stays silent for a committed score that was never live', () => {
-    const committed = { num: 1, t1: 'United States', t2: 'Nigeria', score: [88, 61] }
+    const committed = { num: 1, t1: 'United States', t2: 'Canada', score: [88, 61] }
     const first = detectFinals(null, [{ ...committed, score: undefined }], { scope: 'all' })
     expect(detectFinals(first.next, [committed], { scope: 'all' }).events).toHaveLength(0)
   })
@@ -349,12 +349,12 @@ describe('result notifications', () => {
   it('formats a result notification, noting overtime', () => {
     expect(finalNotification({ game: finalGame })).toMatchObject({
       title: '🏀 FINAL: United States win',
-      body: 'United States 88–61 Nigeria',
+      body: 'United States 88–61 Canada',
       tag: 'final|1',
     })
     expect(finalNotification({ game: { ...finalGame, ot: 1 } }).title).toContain('(OT)')
     expect(finalNotification({ game: { ...finalGame, ot: 2 } }).title).toContain('(2OT)')
-    expect(finalNotification({ game: { ...finalGame, score: [61, 88] } }).title).toContain('Nigeria')
+    expect(finalNotification({ game: { ...finalGame, score: [61, 88] } }).title).toContain('Canada')
   })
 
   it('appends a new result to the toast list', () => {
@@ -379,13 +379,13 @@ describe('result notifications', () => {
 
 describe('week bucketing', () => {
   it('walks days and weeks', () => {
-    expect(addDays('2027-08-27', 1)).toBe('2027-08-28')
-    expect(addDays('2027-08-27', -1)).toBe('2027-08-26')
-    const start = weekStartOf('2027-08-27')
+    expect(addDays('2023-08-25', 1)).toBe('2023-08-26')
+    expect(addDays('2023-08-25', -1)).toBe('2023-08-24')
+    const start = weekStartOf('2023-08-25')
     expect(new Date(`${start}T12:00:00`).getDay()).toBe(0) // a Sunday
-    expect(start <= '2027-08-27').toBe(true)
+    expect(start <= '2023-08-25').toBe(true)
     expect(weekLabel(start)).toBeTruthy()
-    expect(weekdayHeader('2027-08-27')).toBeTruthy()
+    expect(weekdayHeader('2023-08-25')).toBeTruthy()
   })
 })
 
@@ -393,13 +393,13 @@ describe('search', () => {
   const venue = venueFor(G1)
 
   it('matches plain text against teams and venues', () => {
-    expect(matchesSearch(G1, venue, parseQuery('nigeria'))).toBe(true)
-    expect(matchesSearch(G1, venue, parseQuery('lusail'))).toBe(true)
+    expect(matchesSearch(G1, venue, parseQuery('angola'))).toBe(true)
+    expect(matchesSearch(G1, venue, parseQuery('bocaue'))).toBe(true)
     expect(matchesSearch(G1, venue, parseQuery('australia'))).toBe(false)
   })
 
   it('supports field-scoped terms', () => {
-    expect(matchesSearch(G1, venue, parseQuery('team: United States'))).toBe(true)
+    expect(matchesSearch(G1, venue, parseQuery('team: Italy'))).toBe(true)
     expect(matchesSearch(G1, venue, parseQuery('team: Spain'))).toBe(false)
     expect(matchesSearch(G1, venue, parseQuery('stage: first round'))).toBe(true)
   })
@@ -413,7 +413,7 @@ describe('search', () => {
     // Arena term that misses the name forces the sponsorName branch to evaluate.
     expect(matchesSearch(G1, noSponsor, parseQuery('arena: zzz'))).toBe(false)
     // Free text still searches the (empty) sponsor slot without throwing.
-    expect(matchesSearch(G1, noSponsor, parseQuery('lusail'))).toBe(true)
+    expect(matchesSearch(G1, noSponsor, parseQuery('bocaue'))).toBe(true)
   })
 })
 
@@ -421,14 +421,14 @@ describe('URL state', () => {
   it('round-trips view, timezone, spoilers and filters', () => {
     const state = {
       view: 'bracket',
-      tz: 'Asia/Qatar',
+      tz: 'Asia/Manila',
       hideScores: true,
       filters: { ...DEFAULT_FILTERS, group: 'A', team: 'United States', myTeams: true, search: 'x' },
     }
     writeState(state, 'UTC')
     const read = readState('UTC')
     expect(read.view).toBe('bracket')
-    expect(read.tz).toBe('Asia/Qatar')
+    expect(read.tz).toBe('Asia/Manila')
     expect(read.hideScores).toBe(true)
     expect(read.filters).toEqual(state.filters)
   })
@@ -447,7 +447,7 @@ describe('URL state', () => {
       filters: {
         ...DEFAULT_FILTERS,
         stages: ['R1', 'QF'],
-        venue: 'lusail',
+        venue: 'moa',
         timeframe: 'today',
         onMyServices: true,
       },
@@ -455,7 +455,7 @@ describe('URL state', () => {
     writeState(state, 'UTC')
     const read = readState('UTC')
     expect(read.filters.stages).toEqual(['R1', 'QF'])
-    expect(read.filters.venue).toBe('lusail')
+    expect(read.filters.venue).toBe('moa')
     expect(read.filters.timeframe).toBe('today')
     expect(read.filters.onMyServices).toBe(true)
   })
@@ -468,24 +468,24 @@ describe('URL state', () => {
 describe('calendar files', () => {
   it('exports a game with no confirmed tip as an all-day event on its date', () => {
     const ics = buildICS(TBC)
-    expect(ics).toContain('DTSTART;VALUE=DATE:20270908')
-    expect(ics).toContain('DTEND;VALUE=DATE:20270909')
+    expect(ics).toContain('DTSTART;VALUE=DATE:20230908')
+    expect(ics).toContain('DTEND;VALUE=DATE:20230909')
     expect(ics).not.toMatch(/19700101|19691231/)
     // Slot labels stand in for the teams the draw has not named yet.
-    expect(ics).toContain('SUMMARY:FIBA MWC: Winner Group I vs 2nd Group L')
+    expect(ics).toContain('SUMMARY:FIBA MWC: Winner Group I vs 2nd Group J')
     expect(ics).not.toContain('null')
   })
 
   it('keeps a confirmed tip a timed event', () => {
     const ics = buildICS(G1)
-    expect(ics).toContain('DTSTART:20270827T110000Z')
+    expect(ics).toContain('DTSTART:20230825T080000Z')
     expect(ics).not.toContain('VALUE=DATE')
   })
 
   it('leaves the TV line out of a collection entry with no platform', () => {
     const ics = buildICSCollection([{ ...num(1), tv: [], tvNote: null }])
     expect(ics).not.toContain('US TV:')
-    expect(ics).toContain('SUMMARY:FIBA MWC: United States vs Nigeria')
+    expect(ics).toContain('SUMMARY:FIBA MWC: Angola vs Italy')
   })
 
   it('exports every game of the tournament, including unresolved ones', () => {
@@ -498,13 +498,13 @@ describe('calendar files', () => {
   it('builds a single-game .ics naming the tournament, not a sibling', () => {
     const ics = buildICS(G1)
     expect(ics).toContain('BEGIN:VCALENDAR')
-    expect(ics).toContain('SUMMARY:FIBA MWC: United States vs Nigeria')
-    expect(ics).toContain('Lusail Sports Arena')
+    expect(ics).toContain('SUMMARY:FIBA MWC: Angola vs Italy')
+    expect(ics).toContain('Philippine Arena')
     expect(ics).toContain('Game 1')
     expect(ics).not.toContain('EURO')
     expect(ics).not.toContain('WWC')
-    expect(ics).toContain("PRODID:-//FIBA Men's World Cup 2027 Viewer//EN")
-    expect(ics).toContain('UID:fibamwc2027-game-1@')
+    expect(ics).toContain("PRODID:-//FIBA Men's World Cup 2023 Viewer//EN")
+    expect(ics).toContain('UID:fibamwc2023-game-1@')
   })
 
   it('builds a whole first-round collection', () => {
@@ -551,7 +551,7 @@ describe('calendar files', () => {
       URL.revokeObjectURL = origRevoke
       HTMLAnchorElement.prototype.click = origClick
     }
-    expect(clicks[0]).toBe('fiba-mens-world-cup-2027-game-1.ics')
-    expect(clicks[1]).toBe('fiba-mens-world-cup-2027.ics')
+    expect(clicks[0]).toBe('fiba-mens-world-cup-2023-game-1.ics')
+    expect(clicks[1]).toBe('fiba-mens-world-cup-2023.ics')
   })
 })

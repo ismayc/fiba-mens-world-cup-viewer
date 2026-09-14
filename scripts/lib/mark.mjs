@@ -11,10 +11,10 @@
 //
 // This viewer follows the family app-icon recipe: the sport's Noto Emoji ball on
 // the app's own dark background, never the league logo. What distinguishes it from
-// the other basketball viewers is the Qatar-maroon ground bar (the host's color,
+// the other basketball viewers is the maroon ground bar (the host's color,
 // which is also this app's single accent). No globe (that reads as the football
 // World Cup viewers) and no flag detail that disappears at tab size.
-export const QATAR_MAROON = '#8A1538'
+export const ACCENT_MAROON = '#8A1538'
 export const APP_BG = '#15171b'
 
 // Basketball, Google Noto Emoji (Apache License 2.0), drawn in a 128x128 box.
@@ -43,14 +43,14 @@ export const ball = `
 export const ballAt = (x, y, s) =>
   `<g transform="translate(${x},${y}) scale(${s}) translate(-64,-64)">${ball}</g>`
 
-// The complete mark on a 512x512 canvas: the app's dark field, a Qatar-maroon
+// The complete mark on a 512x512 canvas: the app's dark field, a maroon
 // ground bar (the host color and this app's accent), and the basketball resting on
 // it. The GROUND IS PART OF THE IDENTITY, so the favicon keeps it too; stripped of
 // the maroon this would be a plain ball, which the NBA and March Madness viewers
 // already wear.
 export const mark = () => `
   <rect width="512" height="512" fill="${APP_BG}"/>
-  <rect y="430" width="512" height="82" fill="${QATAR_MAROON}"/>
+  <rect y="430" width="512" height="82" fill="${ACCENT_MAROON}"/>
   ${ballAt(256, 250, 2.5)}`
 
 // The same art shrunk into a size x size badge at (x,y), for the share card.

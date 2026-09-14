@@ -14,7 +14,7 @@
     * It paints a fill that references a gradient by url(#id) as PURE BLACK.
       This file therefore uses flat fills only and carries no gradient defs.
 
-  The mark is the same basketball-on-dark with the Qatar-maroon ground as
+  The mark is the same basketball-on-dark with the maroon ground as
   public/icon.svg, so the tab, the home screen and the share card all show one
   identity. It is drawn as a badge here rather than full-bleed, because the card's
   own ground is already the app's dark navy.

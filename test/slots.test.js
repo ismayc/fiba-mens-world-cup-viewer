@@ -71,14 +71,14 @@ describe('the group placing grammar', () => {
 
 describe('reading a game’s sides', () => {
   it('slotLabels returns the labels, falling back to teams', () => {
-    expect(slotLabels(byNum(85))).toEqual(['Winner Group I', '2nd Group L'])
+    expect(slotLabels(byNum(85))).toEqual(['Winner Group I', '2nd Group J'])
     expect(slotLabels({ t1: 'United States', t2: 'Serbia' })).toEqual([
       'United States', 'Serbia',
     ])
   })
 
   it('sideNames prefers the resolved team, then the label, then empty', () => {
-    expect(sideNames(byNum(85))).toEqual(['Winner Group I', '2nd Group L'])
+    expect(sideNames(byNum(85))).toEqual(['Winner Group I', '2nd Group J'])
     expect(sideNames({ t1: 'United States', label1: 'Winner Group I', t2: 'Serbia', label2: '2nd Group L' })).toEqual([
       'United States', 'Serbia',
     ])

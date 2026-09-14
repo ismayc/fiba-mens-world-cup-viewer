@@ -23,7 +23,7 @@ import { allGroupsPlayed, withGroupScores } from './helpers/tournament.js'
 
 const TZ = 'Asia/Qatar'
 const num = (games, n) => games.find((g) => g.num === n)
-// First-round Group A game numbers (United States, Greece, Dominican Republic, Nigeria).
+// First-round Group A game numbers (Dominican Republic, Italy, Angola, Philippines).
 const GA = GAMES.filter((g) => g.stage === 'R1' && g.group === 'A').map((g) => g.num)
 
 function wrap(ui, { onDetail = () => {} } = {}) {
@@ -39,15 +39,15 @@ function wrap(ui, { onDetail = () => {} } = {}) {
 }
 
 const DECISIVE = [
-  ['United States', 'Greece', 90, 60],
-  ['United States', 'Dominican Republic', 90, 60],
-  ['United States', 'Nigeria', 90, 60],
-  ['Greece', 'Dominican Republic', 80, 70],
-  ['Greece', 'Nigeria', 80, 70],
-  ['Dominican Republic', 'Nigeria', 75, 70],
+  ['Dominican Republic', 'Italy', 90, 60],
+  ['Dominican Republic', 'Angola', 90, 60],
+  ['Dominican Republic', 'Philippines', 90, 60],
+  ['Italy', 'Angola', 80, 70],
+  ['Italy', 'Philippines', 80, 70],
+  ['Angola', 'Philippines', 75, 70],
 ]
 const PLAYED = withGroupScores('A', DECISIVE, GAMES)
-const DAY1 = GAMES.filter((g) => g.ko?.startsWith('2027-08-27'))
+const DAY1 = GAMES.filter((g) => g.ko?.startsWith('2023-08-27'))
 
 beforeEach(() => localStorage.clear())
 
@@ -297,10 +297,10 @@ describe('ScenariosView', () => {
     const lots = withGroupScores(
       'A',
       [
-        ['United States', 'Nigeria', 80, 70],
-        ['Dominican Republic', 'United States', 70, 80],
-        ['Greece', 'Dominican Republic', 80, 70],
-        ['Nigeria', 'Greece', 70, 80],
+        ['Dominican Republic', 'Philippines', 80, 70],
+        ['Angola', 'Dominican Republic', 70, 80],
+        ['Italy', 'Angola', 80, 70],
+        ['Philippines', 'Italy', 70, 80],
       ],
       GAMES,
     )
@@ -376,18 +376,18 @@ describe('ScenariosView remaining arms', () => {
     expect(screen.getAllByText('24 possible orders')).toHaveLength(8)
   })
 
-  // Group A is arranged so its one remaining game (game 1, United States v Nigeria)
+  // Group A is arranged so its one remaining game (game 1, Angola v Italy)
   // cannot change any position: the order is decided with a game still to play.
   const decidedBoard = () => {
     let board = allGroupsPlayed()
     board = withGroupScores(
       'A',
       [
-        ['United States', 'Greece', 90, 60],
-        ['United States', 'Dominican Republic', 90, 60],
-        ['Greece', 'Dominican Republic', 80, 70],
-        ['Greece', 'Nigeria', 80, 70],
-        ['Dominican Republic', 'Nigeria', 80, 70],
+        ['Italy', 'Dominican Republic', 90, 60],
+        ['Italy', 'Philippines', 90, 60],
+        ['Dominican Republic', 'Philippines', 80, 70],
+        ['Dominican Republic', 'Angola', 80, 70],
+        ['Philippines', 'Angola', 80, 70],
       ],
       board,
     )

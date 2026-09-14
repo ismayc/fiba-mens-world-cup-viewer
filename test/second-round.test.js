@@ -36,8 +36,8 @@ describe('advancersFrom', () => {
   })
 
   it('names the top two of a finished group in finishing order', () => {
-    expect(advancersFrom('A', afterR1)).toEqual(['United States', 'Greece'])
-    expect(advancersFrom('B', afterR1)).toEqual(['Serbia', 'Lithuania'])
+    expect(advancersFrom('A', afterR1)).toEqual(['Italy', 'Dominican Republic'])
+    expect(advancersFrom('B', afterR1)).toEqual(['Serbia', 'Puerto Rico'])
   })
 })
 
@@ -52,31 +52,33 @@ describe('r2Members', () => {
 
   it('lists the four qualifiers, group1 pair then group2 pair', () => {
     expect(r2Members('I', afterR1).map((t) => t.name)).toEqual([
-      'United States', 'Greece', 'Serbia', 'Lithuania',
+      'Italy', 'Dominican Republic', 'Serbia', 'Puerto Rico',
     ])
   })
 })
 
 describe('the carryover', () => {
-  it('counts the intra-pair first-round game before any new game is played', () => {
-    // After the first round only, each team in group I has played exactly one
-    // second-round-table game: the carried-over game against its group-mate.
+  it('carries each qualifier\'s full first-round record before any new game is played', () => {
+    // The full-carryover model brings each team's ENTIRE first-round record (all
+    // three games) into the second-round table, so after the first round only, each
+    // group I team already shows three games played.
     const rows = rankSecondRound('I', afterR1)
-    for (const r of rows) expect(r.P).toBe(1)
-    // The US beat Greece in group A; that result carries into group I.
-    const us = rows.find((r) => r.name === 'United States')
-    const greece = rows.find((r) => r.name === 'Greece')
-    expect(us.W).toBe(1)
-    expect(greece.L).toBe(1)
+    for (const r of rows) expect(r.P).toBe(3)
+    // Italy swept group A (3-0) and Dominican Republic went 2-1; both records carry
+    // into group I.
+    const italy = rows.find((r) => r.name === 'Italy')
+    const dr = rows.find((r) => r.name === 'Dominican Republic')
+    expect(italy.W).toBe(3)
+    expect(dr.L).toBe(1)
   })
 
-  it('ranks the finished second-round group over all three games each', () => {
+  it('ranks the finished second-round group over all five games each', () => {
     const rows = rankSecondRound('I', afterR2)
-    for (const r of rows) expect(r.P).toBe(3) // one carryover + two new
+    for (const r of rows) expect(r.P).toBe(5) // three carryover + two new
     expect(rows.map((r) => r.name)).toEqual([
-      'United States', 'Serbia', 'Greece', 'Lithuania',
+      'Serbia', 'Italy', 'Puerto Rico', 'Dominican Republic',
     ])
-    expect(rows[0].Pts).toBe(6) // US 3-0 across the second-round table
+    expect(rows[0].Pts).toBe(10) // Serbia 5-0 across the second-round table
   })
 
   it('is null before the group is seeded', () => {
@@ -87,7 +89,7 @@ describe('the carryover', () => {
 describe('secondRoundComplete', () => {
   it('is false before seeding, false part-way, true once all six count', () => {
     expect(secondRoundComplete('I', GAMES)).toBe(false)
-    expect(secondRoundComplete('I', afterR1)).toBe(false) // only the two carryovers
+    expect(secondRoundComplete('I', afterR1)).toBe(false) // only the carried first-round games
     expect(secondRoundComplete('I', afterR2)).toBe(true)
   })
 })

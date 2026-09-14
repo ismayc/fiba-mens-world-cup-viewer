@@ -20,7 +20,7 @@ import { DetailContext } from '../src/context/detail.js'
 import { DEFAULT_FILTERS } from '../src/utils/urlState.js'
 import { pinClock, withGroupScores, playStage } from './helpers/tournament.js'
 
-const TZ = 'Asia/Qatar'
+const TZ = 'Asia/Manila'
 const num = (n) => GAMES.find((g) => g.num === n)
 
 function wrap(ui, { onDetail = () => {} } = {}) {
@@ -38,7 +38,7 @@ beforeEach(() => localStorage.clear())
 describe('WeekView', () => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ['Date'] })
-    vi.setSystemTime(new Date('2027-08-28T12:00:00Z'))
+    vi.setSystemTime(new Date('2023-08-28T12:00:00Z'))
   })
   afterEach(() => vi.useRealTimers())
 
@@ -54,7 +54,7 @@ describe('WeekView', () => {
     expect(document.querySelectorAll('.lg-item').length).toBeGreaterThan(0)
   })
 
-  it('never renders the epoch for a tip-off, and every 2027 game shows a real time', () => {
+  it('never renders the epoch for a tip-off, and every 2023 game shows a real time', () => {
     wrap(<WeekView allMatches={GAMES} shown={GAMES} tz={TZ} dayHidden={() => false} />)
     expect(document.body.textContent).not.toMatch(/1970|1969/)
     // Every game of this edition has a set tip-off, so no cell reads TBC.
@@ -65,21 +65,21 @@ describe('WeekView', () => {
 })
 
 describe('DayMatchesModal', () => {
-  const day = GAMES.filter((g) => g.ko?.startsWith('2027-08-27'))
+  const day = GAMES.filter((g) => g.ko?.startsWith('2023-08-26'))
 
   it('lists a day’s games and closes', () => {
     const onClose = vi.fn()
     wrap(
       <DayMatchesModal
         matches={day}
-        dayKey="2027-08-27"
+        dayKey="2023-08-26"
         tz={TZ}
         byNum={gamesByNum(GAMES)}
         onClose={onClose}
       />,
     )
     expect(screen.getAllByText('United States').length).toBeGreaterThan(0)
-    expect(screen.getByText('Friday, August 27')).toBeInTheDocument()
+    expect(screen.getByText('Saturday, August 26')).toBeInTheDocument()
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(onClose).toHaveBeenCalled()
   })
@@ -88,7 +88,7 @@ describe('DayMatchesModal', () => {
     wrap(
       <DayMatchesModal
         matches={day}
-        dayKey="2027-08-27"
+        dayKey="2023-08-26"
         tz={TZ}
         byNum={gamesByNum(GAMES)}
         onClose={() => {}}
@@ -105,16 +105,16 @@ describe('DayMatchesModal', () => {
 })
 
 describe('GroupGamesModal', () => {
-  // A complete first-round Group A (United States, Greece, Dominican Republic, Nigeria).
+  // A complete first-round Group A (Italy, Dominican Republic, Philippines, Angola).
   const board = withGroupScores(
     'A',
     [
-      ['United States', 'Greece', 90, 60],
-      ['United States', 'Dominican Republic', 90, 60],
-      ['United States', 'Nigeria', 90, 60],
-      ['Greece', 'Dominican Republic', 80, 70],
-      ['Greece', 'Nigeria', 80, 70],
-      ['Dominican Republic', 'Nigeria', 75, 70],
+      ['Italy', 'Angola', 81, 67],
+      ['Dominican Republic', 'Philippines', 87, 81],
+      ['Italy', 'Dominican Republic', 82, 87],
+      ['Philippines', 'Angola', 70, 80],
+      ['Angola', 'Dominican Republic', 67, 75],
+      ['Philippines', 'Italy', 83, 90],
     ],
     GAMES,
   )
@@ -122,7 +122,7 @@ describe('GroupGamesModal', () => {
   it('lists a group’s six games', () => {
     wrap(<GroupGamesModal group="A" matches={board} tz={TZ} onClose={() => {}} />)
     expect(
-      screen.getAllByText(/United States|Greece|Dominican Republic|Nigeria/).length,
+      screen.getAllByText(/Italy|Dominican Republic|Philippines|Angola/).length,
     ).toBeGreaterThan(5)
   })
 
@@ -130,7 +130,7 @@ describe('GroupGamesModal', () => {
     wrap(
       <GroupGamesModal
         group="A"
-        team="United States"
+        team="Italy"
         matches={board}
         tz={TZ}
         knockout={{
@@ -155,7 +155,7 @@ describe('GroupGamesModal', () => {
     wrap(
       <GroupGamesModal
         group="A"
-        team="United States"
+        team="Italy"
         matches={board}
         tz={TZ}
         knockout={{
@@ -274,7 +274,7 @@ describe('NextMatch', () => {
   })
 
   it('counts the days as well, from further out', () => {
-    pinClock(new Date('2027-08-20T09:00:00+03:00'))
+    pinClock(new Date('2023-08-20T09:00:00+08:00'))
     wrap(<NextMatch matches={GAMES} tz={TZ} />)
     expect(document.querySelector('.nm-countdown').textContent).toMatch(/^\d+d/)
   })
@@ -282,7 +282,7 @@ describe('NextMatch', () => {
   it('shows nothing once the whole tournament is in the past', () => {
     const past = GAMES.map((g) => ({
       ...g,
-      ko: g.ko ? g.ko.replace('2027-08', '2020-08').replace('2027-09', '2020-09') : g.ko,
+      ko: g.ko ? g.ko.replace('2023-08', '2020-08').replace('2023-09', '2020-09') : g.ko,
       score: [80, 70],
     }))
     wrap(<NextMatch matches={past} tz={TZ} />)

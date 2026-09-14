@@ -346,7 +346,7 @@ describe('App remaining arms', () => {
 
   it('survives the history backfill failing', async () => {
     vi.useFakeTimers()
-    vi.setSystemTime(new Date('2027-09-08T12:00:00Z'))
+    vi.setSystemTime(new Date('2023-09-08T12:00:00Z'))
     let call = 0
     global.fetch = vi.fn(async () => {
       call += 1
@@ -390,14 +390,14 @@ describe('knockout games in the next-up bar', () => {
   it('names an unresolved knockout game by its slot labels', () => {
     wrap(<NextMatch matches={soon([85])} tz={TZ} />)
     expect(screen.getByText('Winner Group I')).toBeInTheDocument()
-    expect(screen.getByText('2nd Group L')).toBeInTheDocument()
+    expect(screen.getByText('2nd Group J')).toBeInTheDocument()
     expect(document.querySelectorAll('.nm-flag')[0].textContent).toBe('•')
   })
 
   it('names them in the stacked layout too', () => {
     wrap(<NextMatch matches={soon([85, 86])} tz={TZ} />)
     expect(screen.getByText('Winner Group I')).toBeInTheDocument()
-    expect(screen.getByText('Winner Group L')).toBeInTheDocument()
+    expect(screen.getByText('Winner Group J')).toBeInTheDocument()
     expect(document.querySelectorAll('.nm-live-row')).toHaveLength(2)
   })
 
@@ -439,7 +439,7 @@ describe('the last conditional arms', () => {
     // Exercises MatchCard's slot tooltip directly via a slot map. Both of a group's
     // top two go to the quarter-finals (no bye, no qualification round).
     wrap(<MatchCard match={num(GAMES, 1)} tz={TZ} slotMap={{ A: { win: 85, second: 86 } }} clinch={{}} />)
-    const title = screen.getByText('United States').closest('[title]').getAttribute('title')
+    const title = screen.getByText('Angola').closest('[title]').getAttribute('title')
     expect(title).toMatch(/Group A knockout route/)
     expect(title).toMatch(/1st → Quarter-final · Game 85/)
     expect(title).toMatch(/2nd → Quarter-final · Game 86/)
@@ -500,7 +500,7 @@ describe('the very last arms', () => {
 
   it('expands BOTH sides of a cell whose two feeds are set', () => {
     vi.useFakeTimers({ toFake: ['Date'] })
-    vi.setSystemTime(new Date('2027-09-12T12:00:00Z'))
+    vi.setSystemTime(new Date('2023-09-10T12:00:00Z'))
     // Game 91 is "Loser Game 89" v "Loser Game 90": both sides are feeds.
     const board = [
       { ...num(GAMES, 89), t1: 'Japan', t2: 'Spain' },
@@ -521,7 +521,7 @@ describe('the very last arms', () => {
     const scroll = vi.fn()
     Element.prototype.scrollIntoView = scroll
     const day = document.createElement('div')
-    day.id = 'day-2027-08-27'
+    day.id = 'day-2023-08-26'
     document.body.appendChild(day)
     localStorage.setItem('fmwc:followed', JSON.stringify(['United States']))
     wrap(<NextMatch matches={GAMES} tz={TZ} />)
@@ -546,7 +546,7 @@ describe('defensive arms in the last components', () => {
     const scroll = vi.fn()
     Element.prototype.scrollIntoView = scroll
     const day = document.createElement('div')
-    day.id = 'day-2027-08-27'
+    day.id = 'day-2023-08-26'
     document.body.appendChild(day)
     localStorage.setItem('fmwc:followed', JSON.stringify(['United States']))
     wrap(<NextMatch matches={GAMES} tz={TZ} />)
@@ -559,7 +559,7 @@ describe('defensive arms in the last components', () => {
     // A first-round group (A-H) is never in the slot map (keyed I-L), so its cards
     // carry no route tooltip.
     wrap(<MatchCard match={num(GAMES, 1)} tz={TZ} slotMap={{}} clinch={{}} />)
-    const title = screen.getByText('United States').closest('[title]')?.getAttribute('title') || ''
+    const title = screen.getByText('Angola').closest('[title]')?.getAttribute('title') || ''
     expect(title).not.toMatch(/knockout route/)
   })
 

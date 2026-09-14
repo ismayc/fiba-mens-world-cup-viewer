@@ -1,5 +1,5 @@
 // Group ranking + qualification using FIBA's official classification rules
-// (FIBA Internal Regulations, Book 2, applied to the Men's World Cup 2027).
+// (FIBA Internal Regulations, Book 2, applied to the 2023 Men's World Cup).
 //
 // THE POINTS SYSTEM IS NOT FOOTBALL'S. A win is 2 points, a LOSS IS 1 POINT, and
 // only a forfeit scores 0. Every team plays three games inside a group, so a
@@ -28,20 +28,31 @@
 // re-ranked from criterion 1 using a fresh sub-table among only themselves. See
 // resolveTie().
 //
-// ── THE MEN'S TWO-STAGE FORMAT, AND WHY THIS FILE IS GENERIC OVER "A GROUP" ──
+// ── THE MEN'S TWO-STAGE FORMAT, AND THE CARRYOVER RULE ──
 // The men's tournament has TWO group stages. Eight first-round groups A-H of four
 // send their top two into four second-round groups I-L (A&B -> I, C&D -> J,
-// E&F -> K, G&H -> L). The head-to-head game the two co-advancers already played
-// in the first round CARRIES OVER: it counts again in the second-round table.
+// E&F -> K, G&H -> L).
 //
-// That carryover needs no special arithmetic. A second-round group is just a
-// four-team round-robin whose six games happen to have been played across two
-// rounds: the two intra-pair games in the first round, the four cross games in
-// the second. So "the group-stage games played strictly among these four teams"
-// is exactly the set that ranks them, in BOTH stages. rankGroup() therefore takes
-// a list of member teams, not a group key, and gamesAmong() finds their games by
-// membership. utils/secondRound.js supplies the second-round membership once the
-// feeding first-round groups are decided.
+// The carryover is NOT just the one head-to-head between the two co-advancers.
+// FIBA carries each qualifier's ENTIRE first-round record forward: a team arrives
+// in the second round with all three of its first-round results (including its
+// games against the two teams that did NOT advance) and then plays two new games,
+// so its second-round table shows a FIVE-game record. FIBA's competition system
+// states it plainly: "all five group stage games counting towards their records."
+// (Verified against the real 2023 tournament: Serbia's second-round table in
+// Group I is 4-1 over 5 games, not 2-1 over the 3 games among the four members.)
+//
+// So a second-round member's counting games are collected by carryoverGames()
+// (below), which takes every group-stage game the team played, not only the games
+// strictly among the four members. rankGroup() therefore takes a list of member
+// teams plus a game collector: gamesAmong() for a first-round group, carryoverGames()
+// for a second-round group. utils/secondRound.js supplies the second-round
+// membership once the feeding first-round groups are decided.
+//
+// The head-to-head tie-break (criteria 2-4) still uses only the games BETWEEN the
+// tied teams (gamesAmong of the tied set), and completion is still measured over
+// the six games among the four members; only the record (criteria 1, 5, 6) counts
+// all five of a team's games.
 //
 // There is no fair-play criterion in basketball, so nothing reads a card feed.
 
@@ -51,8 +62,9 @@ import { TEAMS, RANK_BY_TEAM } from '../data/teams.js'
 export const FIRST_ROUND_GROUPS = Object.keys(TEAMS)
 
 // Which first-round groups feed each second-round group. FIBA merges adjacent
-// pairs. The four cross games are played in the second round; the two intra-pair
-// games carry over from the first. This is the 2023 wiring, unchanged for 2027.
+// pairs. The four cross games are played in the second round; each qualifier's
+// full first-round record carries forward (see carryoverGames). This is the 2023
+// membership (A&B -> I, C&D -> J, E&F -> K, G&H -> L).
 export const R2_MEMBERSHIP = { I: ['A', 'B'], J: ['C', 'D'], K: ['E', 'F'], L: ['G', 'H'] }
 export const SECOND_ROUND_GROUPS = Object.keys(R2_MEMBERSHIP)
 
@@ -91,10 +103,10 @@ function blank(team) {
   return { ...team, P: 0, W: 0, L: 0, PF: 0, PA: 0, PD: 0, Pts: 0 }
 }
 
-// The group-stage games played strictly among `names` (both sides in the set),
-// final and decisive. This is the carryover-aware game set: for a first-round
-// group it is the six group games; for a second-round group it is the two
-// carried-over first-round games plus the four second-round games.
+// The group-stage games played strictly among `names` (BOTH sides in the set),
+// final and decisive. This ranks a FIRST-ROUND group (its six games) and is also
+// the head-to-head set for the tie-break in either stage (the games between a set
+// of tied teams).
 export function gamesAmong(names, games) {
   const set = new Set(names)
   return games.filter(
@@ -108,23 +120,44 @@ export function gamesAmong(names, games) {
   )
 }
 
+// The group-stage games that count toward a SECOND-ROUND member's record: every
+// decisive group-stage game the team played, whether or not the opponent is one of
+// the four second-round members. This is the "all five group stage games" rule: a
+// qualifier's three first-round games (including those against teams that did not
+// advance) plus its two second-round games. A game where only one side is a member
+// is included and credited to that member alone (see baseStats). It is NOT a
+// symmetric among-the-four set, which is exactly why the second round differs from
+// the first.
+export function carryoverGames(names, games) {
+  const set = new Set(names)
+  return games.filter(
+    (g) =>
+      isGroupStage(g) &&
+      (set.has(g.t1) || set.has(g.t2)) &&
+      g.score &&
+      !g.voided &&
+      g.score[0] !== g.score[1],
+  )
+}
+
 // A basketball game cannot be drawn: overtime is played until someone wins, so
 // every scored game increments exactly one W and one L. Any record that claims a
 // level final score is a data error rather than a draw, and gamesAmong() has
 // already skipped it so it cannot silently award both teams a win.
-function baseStats(members, games) {
+function baseStats(members, games, collect = gamesAmong) {
   const rows = {}
   for (const t of members) rows[t.name] = blank(t)
-  for (const g of gamesAmong(members.map((t) => t.name), games)) {
+  for (const g of collect(members.map((t) => t.name), games)) {
     const [p1, p2] = g.score
     const a = rows[g.t1]
     const b = rows[g.t2]
-    /* v8 ignore next -- unreachable: gamesAmong only returns games whose sides are both members */
-    if (!a || !b) continue
-    a.P++; b.P++
-    a.PF += p1; a.PA += p2
-    b.PF += p2; b.PA += p1
-    if (p1 > p2) { a.W++; b.L++ } else { b.W++; a.L++ }
+    // Credit each side that is a member INDEPENDENTLY. For a first-round group
+    // both sides are always members (gamesAmong). For a second-round group,
+    // carryoverGames() also returns a member's games against non-members (its
+    // first-round results against teams that did not advance), where only the
+    // member side is present and only it is credited.
+    if (a) { a.P++; a.PF += p1; a.PA += p2; if (p1 > p2) a.W++; else a.L++ }
+    if (b) { b.P++; b.PF += p2; b.PA += p1; if (p2 > p1) b.W++; else b.L++ }
   }
   for (const k in rows) {
     const r = rows[k]
@@ -202,10 +235,12 @@ function resolveTie(tied, games, depth = 0) {
 }
 
 // Rank a group given its member teams (in any order) and all tournament games.
-// Works for a first-round group (pass TEAMS[key]) or a second-round group (pass
-// the resolved membership from utils/secondRound.js).
-export function rankGroup(members, games) {
-  const rows = Object.values(baseStats(members, games))
+// `collect` chooses the record set: gamesAmong (the default) ranks a first-round
+// group (pass TEAMS[key]); carryoverGames ranks a second-round group (pass the
+// resolved membership from utils/secondRound.js, and carryoverGames as collect),
+// counting each qualifier's full five-game record.
+export function rankGroup(members, games, collect = gamesAmong) {
+  const rows = Object.values(baseStats(members, games, collect))
   // Criterion 1: FIBA points. Ties are then broken by resolveTie.
   rows.sort((a, b) => b.Pts - a.Pts)
 

@@ -31,10 +31,10 @@ export const LEAGUE = {
   name: "FIBA Men's World Cup",
   icsSummaryPrefix: 'FIBA MWC',
   // The full product title: index.html's <title> and the manifest's name.
-  title: "FIBA Men's World Cup 2027 — Schedule Viewer",
+  title: "FIBA Men's World Cup 2023 — Schedule Viewer",
   // The edition, used as a calendar name.
-  edition: "FIBA Men's World Cup 2027",
-  season: 2027,
+  edition: "FIBA Men's World Cup 2023",
+  season: 2023,
   espnPath: 'basketball/fiba',
   storageKey: 'fmwc', // 'fmwc:theme', 'fmwc:followed', 'fmwc:asItStands', …
   // UI chrome only. Matches --bg in index.css, <meta name="theme-color">, and the
@@ -50,17 +50,18 @@ export const LEAGUE = {
   homeAwaySep: 'vs',
 
   // ── The host ────────────────────────────────────────────────────────────────
-  // All four 2027 arenas are in the Doha metropolitan area (Lusail, Doha, Al Rayyan,
-  // Al Wakrah) and all sit on Asia/Qatar (+03:00), so the single-timezone simplification
-  // the women's Berlin edition relied on still holds: only the building is unknown for a
-  // final-phase game whose round FIBA has not announced yet. These four values are
-  // restated by hand in utils/venue.js and again in scripts/official.mjs, which src/
-  // cannot import.
+  // 2023 was co-hosted across three countries and five arenas on THREE timezones
+  // (the Philippines +08:00, Okinawa/Japan +09:00, Jakarta/Indonesia +07:00), so a
+  // game's clock comes from its own venue (utils/venue.js reads VENUES[game.venue].tz),
+  // not from a single tournament zone. This `host` is the final-phase host: the
+  // quarter-finals onward were played at the Mall of Asia Arena in Metro Manila.
+  // It seeds the timezone picker and backs the venue fallback for a rare venue-less
+  // game; every arena's own timezone is added to the picker in utils/time.js.
   host: {
-    city: 'Doha',
-    country: 'Qatar',
-    countryFlag: '🇶🇦',
-    tz: 'Asia/Qatar',
+    city: 'Manila',
+    country: 'Philippines',
+    countryFlag: '🇵🇭',
+    tz: 'Asia/Manila',
   },
 
   // ── Time ────────────────────────────────────────────────────────────────────
@@ -74,10 +75,10 @@ export const LEAGUE = {
   // the start. The year is deliberate, so a future edition's feed cannot overwrite this
   // one in a subscriber's calendar.
   ics: {
-    prodId: "-//FIBA Men's World Cup 2027 Viewer//EN",
+    prodId: "-//FIBA Men's World Cup 2023 Viewer//EN",
     domain: 'fibamensworldcupviewer',
-    uidPrefix: 'fibamwc2027-game-',
-    filenameBase: 'fiba-mens-world-cup-2027',
+    uidPrefix: 'fibamwc2023-game-',
+    filenameBase: 'fiba-mens-world-cup-2023',
   },
 
   // Netlify serves /calendar.ics; GitHub Pages cannot run the function. Both hosts are

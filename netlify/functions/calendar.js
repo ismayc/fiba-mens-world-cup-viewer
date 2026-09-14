@@ -19,9 +19,13 @@
 // returns 403 to datacenter IPs — which is exactly what a Netlify function runs
 // on. Using the wrong host makes this feed 502 in production while working
 // perfectly from a laptop.
+// NOTE: ESPN's fiba slug is time-multiplexed and does not serve the completed 2023
+// event, so this live fetch returns no events in production and the feed is empty.
+// The identity below is correct; wiring the feed to the committed 2023 schedule is a
+// separate change (a Netlify function cannot import the repo's data module).
 const FEED =
   'https://site.web.api.espn.com/apis/site/v2/sports/basketball/fiba/scoreboard' +
-  '?dates=20270827-20270912&limit=200'
+  '?dates=20230825-20230910&limit=200'
 const GAME_MS = 135 * 60 * 1000
 
 // One range query returns the whole tournament, so there is no per-date paging.
@@ -29,22 +33,20 @@ const GAME_MS = 135 * 60 * 1000
 // ESPN names arenas COMMERCIALLY; FIBA does not, and the app's committed data
 // (data/venues.js) uses FIBA's name. This is the `sponsorName` -> `name` half of
 // VENUE_META in scripts/official.mjs, restated because a Netlify function cannot
-// import from the repo. It is empty until FIBA/ESPN assign and name the 2027
-// arenas; add any alias here when a sponsor name appears, keeping it in step with
-// official.mjs.
+// import from the repo. It is empty because ESPN does not serve the 2023 event, so
+// no ESPN venue names reach this feed; kept for parity with the family.
 const VENUE_ALIASES = {}
 
 // ESPN sometimes files a game's tip-off at the wrong instant (the women's edition
-// had one such double-offset record). None is known for the 2027 men's tournament
-// yet — the fixtures are not published. Keyed by ESPN EVENT ID, never by team
-// names; values are the corrected start as a UTC instant. Keep this in step with
-// KNOWN_ESPN_TIME_BUGS in scripts/official.mjs.
+// had one such double-offset record). This feed never sees the 2023 event from ESPN,
+// so the map stays empty. Keyed by ESPN EVENT ID, never by team names; values are
+// the corrected start as a UTC instant. Keep this in step with KNOWN_ESPN_TIME_BUGS
+// in scripts/official.mjs.
 const KNOWN_ESPN_TIME_BUGS = {}
 
 // Only this tournament's games. ESPN files every FIBA competition under one league
-// slug, so a note headline check keeps another event out of the feed. The exact
-// 2027 headline is not yet published, so this matches the FIBA World Cup family
-// loosely; tighten it once the real headlines appear.
+// slug, so a note headline check keeps another event out of the feed. It matches the
+// FIBA World Cup family loosely.
 const EVENT_NOTE = /^FIBA\b.*\bWorld Cup\b/
 
 function pad(n) {
@@ -117,6 +119,7 @@ export function parseScoreboard(json) {
     const away = competitors.find((c) => c.homeAway === 'away') || competitors[1]
     if (!home || !away) continue
 
+    /* v8 ignore next -- unreachable: KNOWN_ESPN_TIME_BUGS is permanently empty (ESPN does not serve the 2023 event), so the left branch is never taken */
     const start = new Date(KNOWN_ESPN_TIME_BUGS[event.id] || event.date)
     if (Number.isNaN(start.getTime())) continue
 
@@ -124,6 +127,7 @@ export function parseScoreboard(json) {
     const a = sideOf(away)
     const venue = comp.venue || {}
     const city = venue.address?.city
+    /* v8 ignore next -- unreachable: VENUE_ALIASES is permanently empty (ESPN does not serve the 2023 event), so the left branch is never taken */
     const venueName = VENUE_ALIASES[venue.fullName] || venue.fullName
 
     out.push({
@@ -141,7 +145,7 @@ export function parseScoreboard(json) {
 
 function vevent(m) {
   const end = new Date(m.start.getTime() + GAME_MS)
-  const uid = `fibamwc2027-${m.date}-${m.away}-${m.home}@fibamensworldcupviewer`.replace(
+  const uid = `fibamwc2023-${m.date}-${m.away}-${m.home}@fibamensworldcupviewer`.replace(
     /\s+/g,
     '_',
   )
@@ -165,17 +169,17 @@ export const handler = async (event) => {
     let games = parseScoreboard(await res.json())
 
     const teamsParam = (event.queryStringParameters && event.queryStringParameters.teams) || ''
-    let calName = "FIBA Men's World Cup 2027"
+    let calName = "FIBA Men's World Cup 2023"
     if (teamsParam) {
       const want = new Set(teamsParam.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean))
       games = games.filter((m) => want.has(m.home.toLowerCase()) || want.has(m.away.toLowerCase()))
-      calName = "FIBA Men's World Cup 2027 — My Teams"
+      calName = "FIBA Men's World Cup 2023 — My Teams"
     }
 
     const body = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
-      "PRODID:-//FIBA Men's World Cup 2027 Viewer//EN",
+      "PRODID:-//FIBA Men's World Cup 2023 Viewer//EN",
       'CALSCALE:GREGORIAN',
       'METHOD:PUBLISH',
       `X-WR-CALNAME:${esc(calName)}`,
@@ -189,7 +193,7 @@ export const handler = async (event) => {
       statusCode: 200,
       headers: {
         'Content-Type': 'text/calendar; charset=utf-8',
-        'Content-Disposition': 'inline; filename="fiba-mens-world-cup-2027.ics"',
+        'Content-Disposition': 'inline; filename="fiba-mens-world-cup-2023.ics"',
         'Cache-Control': 'public, max-age=900',
         'Access-Control-Allow-Origin': '*',
       },

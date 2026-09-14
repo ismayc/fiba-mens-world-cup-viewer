@@ -20,14 +20,14 @@ import { withGroupScores, playStage } from './helpers/tournament.js'
 
 const A = (results) => withGroupScores('A', results, GAMES)
 
-// Group A completed: US 3-0, Greece 2-1, Dominican Republic 1-2, Nigeria 0-3.
+// Group A completed: Italy 3-0, Dominican Republic 2-1, Philippines 1-2, Angola 0-3.
 const DECISIVE = [
-  ['United States', 'Nigeria', 90, 60],
-  ['United States', 'Dominican Republic', 90, 60],
-  ['United States', 'Greece', 90, 60],
-  ['Greece', 'Dominican Republic', 90, 60],
-  ['Greece', 'Nigeria', 90, 60],
-  ['Dominican Republic', 'Nigeria', 90, 60],
+  ['Italy', 'Angola', 90, 60],
+  ['Italy', 'Philippines', 90, 60],
+  ['Italy', 'Dominican Republic', 90, 60],
+  ['Dominican Republic', 'Philippines', 90, 60],
+  ['Dominican Republic', 'Angola', 90, 60],
+  ['Philippines', 'Angola', 90, 60],
 ]
 
 describe('a completed first-round group', () => {
@@ -35,18 +35,18 @@ describe('a completed first-round group', () => {
   const clinch = computeClinch(done)
 
   it('marks the winner, the other qualifier, and the eliminated pair', () => {
-    expect(clinch['United States']).toBe('won-group')
-    expect(clinch.Greece).toBe('advanced')
-    expect(clinch['Dominican Republic']).toBe('eliminated')
-    expect(clinch.Nigeria).toBe('eliminated')
+    expect(clinch['Italy']).toBe('won-group')
+    expect(clinch['Dominican Republic']).toBe('advanced')
+    expect(clinch.Philippines).toBe('eliminated')
+    expect(clinch.Angola).toBe('eliminated')
   })
 
   it('locks every position', () => {
     const b = groupPositionBounds(done)
-    expect(b['United States']).toEqual({ best: 1, worst: 1 })
-    expect(b.Greece).toEqual({ best: 2, worst: 2 })
-    expect(b['Dominican Republic']).toEqual({ best: 3, worst: 3 })
-    expect(b.Nigeria).toEqual({ best: 4, worst: 4 })
+    expect(b['Italy']).toEqual({ best: 1, worst: 1 })
+    expect(b['Dominican Republic']).toEqual({ best: 2, worst: 2 })
+    expect(b.Philippines).toEqual({ best: 3, worst: 3 })
+    expect(b.Angola).toEqual({ best: 4, worst: 4 })
   })
 
   it('leaves the other groups undecided', () => {
@@ -67,8 +67,8 @@ describe('before anything is played', () => {
 
   it('leaves every team able to finish anywhere', () => {
     const b = groupPositionBounds(GAMES)
-    expect(b['United States']).toEqual({ best: 1, worst: 4 })
-    expect(b.Qatar).toEqual({ best: 1, worst: 4 })
+    expect(b['Italy']).toEqual({ best: 1, worst: 4 })
+    expect(b.Lebanon).toEqual({ best: 1, worst: 4 })
   })
 
   it('reports all 24 orderings of a four-team group as reachable', () => {
@@ -77,30 +77,31 @@ describe('before anything is played', () => {
 })
 
 describe('partial first-round groups', () => {
-  // US and Greece have each won twice; Dominican Republic and Nigeria have lost
-  // twice. Whatever happens, US and Greece finish 1st and 2nd in some order.
+  // Italy and Dominican Republic have each won twice; Philippines and Angola have
+  // lost twice. Whatever happens, Italy and Dominican Republic finish 1st and 2nd in
+  // some order.
   const twoRounds = A([
-    ['United States', 'Nigeria', 90, 60],
-    ['Greece', 'Dominican Republic', 90, 60],
-    ['United States', 'Dominican Republic', 90, 60],
-    ['Nigeria', 'Greece', 60, 90],
+    ['Italy', 'Angola', 90, 60],
+    ['Dominican Republic', 'Philippines', 90, 60],
+    ['Italy', 'Philippines', 90, 60],
+    ['Angola', 'Dominican Republic', 60, 90],
   ])
 
   it('clinches a top-two place without pinning the placing', () => {
     const clinch = computeClinch(twoRounds)
-    expect(clinch['United States']).toBe('advanced')
-    expect(clinch.Greece).toBe('advanced')
-    expect(groupPositionBounds(twoRounds)['United States']).toEqual({ best: 1, worst: 2 })
+    expect(clinch['Italy']).toBe('advanced')
+    expect(clinch['Dominican Republic']).toBe('advanced')
+    expect(groupPositionBounds(twoRounds)['Italy']).toEqual({ best: 1, worst: 2 })
   })
 
   it('eliminates the two that can no longer reach the top two', () => {
     const clinch = computeClinch(twoRounds)
-    expect(clinch['Dominican Republic']).toBe('eliminated')
-    expect(clinch.Nigeria).toBe('eliminated')
+    expect(clinch.Philippines).toBe('eliminated')
+    expect(clinch.Angola).toBe('eliminated')
   })
 
   it('claims nothing after only one round', () => {
-    const clinch = computeClinch(A([['United States', 'Nigeria', 90, 60]]))
+    const clinch = computeClinch(A([['Italy', 'Angola', 90, 60]]))
     for (const v of Object.values(clinch)) expect(v).toBeNull()
   })
 
@@ -115,39 +116,39 @@ describe('partial first-round groups', () => {
   })
 
   it('ignores a voided game', () => {
-    const voided = A([['United States', 'Nigeria', 90, 60]]).map((g) =>
+    const voided = A([['Italy', 'Angola', 90, 60]]).map((g) =>
       g.stage === 'R1' && g.group === 'A' && g.score ? { ...g, voided: true } : g,
     )
-    expect(groupPositionBounds(voided)['United States']).toEqual({ best: 1, worst: 4 })
+    expect(groupPositionBounds(voided)['Italy']).toEqual({ best: 1, worst: 4 })
   })
 })
 
 describe('conservatism', () => {
   it('refuses to order teams whose meeting has not happened', () => {
     const board = A([
-      ['United States', 'Nigeria', 90, 60],
-      ['Greece', 'Dominican Republic', 90, 60],
-      ['United States', 'Dominican Republic', 90, 60],
-      ['Nigeria', 'Greece', 60, 90],
+      ['Italy', 'Angola', 90, 60],
+      ['Dominican Republic', 'Philippines', 90, 60],
+      ['Italy', 'Philippines', 90, 60],
+      ['Angola', 'Dominican Republic', 60, 90],
     ])
     const b = groupPositionBounds(board)
-    expect(b['United States']).toEqual({ best: 1, worst: 2 })
-    expect(b.Greece).toEqual({ best: 1, worst: 2 })
-    expect(b['Dominican Republic']).toEqual({ best: 3, worst: 4 })
-    expect(b.Nigeria).toEqual({ best: 3, worst: 4 })
+    expect(b['Italy']).toEqual({ best: 1, worst: 2 })
+    expect(b['Dominican Republic']).toEqual({ best: 1, worst: 2 })
+    expect(b.Philippines).toEqual({ best: 3, worst: 4 })
+    expect(b.Angola).toEqual({ best: 3, worst: 4 })
   })
 
   it('collapses the range as soon as the deciding game is final', () => {
     const board = A([
-      ['United States', 'Nigeria', 90, 60],
-      ['Greece', 'Dominican Republic', 90, 60],
-      ['United States', 'Dominican Republic', 90, 60],
-      ['Nigeria', 'Greece', 60, 90],
-      ['United States', 'Greece', 80, 70],
+      ['Italy', 'Angola', 90, 60],
+      ['Dominican Republic', 'Philippines', 90, 60],
+      ['Italy', 'Philippines', 90, 60],
+      ['Angola', 'Dominican Republic', 60, 90],
+      ['Italy', 'Dominican Republic', 80, 70],
     ])
     const b = groupPositionBounds(board)
-    expect(b['United States']).toEqual({ best: 1, worst: 1 })
-    expect(b.Greece).toEqual({ best: 2, worst: 2 })
+    expect(b['Italy']).toEqual({ best: 1, worst: 1 })
+    expect(b['Dominican Republic']).toEqual({ best: 2, worst: 2 })
   })
 })
 
@@ -162,32 +163,33 @@ describe('the second round', () => {
 
   it('marks the finished second-round group like a first-round one', () => {
     const clinch = computeClinchR2(afterR2)
-    // Group I ranks US 3-0, Serbia 2-1, Greece 1-2, Lithuania 0-3.
-    expect(clinch['United States']).toBe('won-group')
-    expect(clinch.Serbia).toBe('advanced')
-    expect(clinch.Lithuania).toBe('eliminated')
-    expect(groupPositionBoundsR2(afterR2)['United States']).toEqual({ best: 1, worst: 1 })
+    // With the full-carryover model, group I ranks Serbia 5-0, Italy 4-1,
+    // Puerto Rico 3-2, Dominican Republic 2-3.
+    expect(clinch.Serbia).toBe('won-group')
+    expect(clinch['Italy']).toBe('advanced')
+    expect(clinch['Dominican Republic']).toBe('eliminated')
+    expect(groupPositionBoundsR2(afterR2)['Serbia']).toEqual({ best: 1, worst: 1 })
   })
 })
 
 describe('change detection and presentation', () => {
   it('reports only what a new batch of results settled', () => {
-    const before = A([['United States', 'Nigeria', 90, 60]]) // one round: nothing settled
+    const before = A([['Italy', 'Angola', 90, 60]]) // one round: nothing settled
     const after = A(DECISIVE)
     const changes = newlyClinched(before, after)
     const byTeam = Object.fromEntries(changes.map((c) => [c.team, c.status]))
-    expect(byTeam['United States']).toBe('won-group')
-    expect(byTeam.Nigeria).toBe('eliminated')
+    expect(byTeam['Italy']).toBe('won-group')
+    expect(byTeam.Angola).toBe('eliminated')
     expect(changes.every((c) => c.group === 'A')).toBe(true)
   })
 
   it('writes a headline for every status it emits', () => {
     for (const status of ['won-group', 'advanced', 'eliminated']) {
-      const line = clinchHeadline({ team: 'United States', group: 'A', status })
-      expect(line).toContain('United States')
+      const line = clinchHeadline({ team: 'Italy', group: 'A', status })
+      expect(line).toContain('Italy')
       expect(line.length).toBeGreaterThan(10)
     }
-    expect(clinchHeadline({ team: 'United States', group: 'A', status: 'won-group' })).toMatch(/WON/)
+    expect(clinchHeadline({ team: 'Italy', group: 'A', status: 'won-group' })).toMatch(/WON/)
   })
 
   it('badges every status and nothing else', () => {

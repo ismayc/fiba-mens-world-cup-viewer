@@ -26,20 +26,20 @@ import {
 } from '../src/utils/qualification.js'
 import { withGroupScores } from './helpers/tournament.js'
 
-// Group A is United States, Greece, Dominican Republic, Nigeria (world-ranking order).
+// Group A is Italy, Dominican Republic, Philippines, Angola (world-ranking order).
 const A = (results) => withGroupScores('A', results, GAMES)
 const order = (rows) => rows.map((r) => r.name)
 const rank = (members, games) => rankGroup(members, games)
 
-// A first-round group A completed with US 3-0, Greece 2-1, Dominican Republic 1-2,
-// Nigeria 0-3.
+// A first-round group A completed with Italy 3-0, Dominican Republic 2-1,
+// Philippines 1-2, Angola 0-3.
 const DECISIVE = [
-  ['United States', 'Nigeria', 90, 60],
-  ['United States', 'Dominican Republic', 90, 60],
-  ['United States', 'Greece', 90, 60],
-  ['Greece', 'Dominican Republic', 90, 60],
-  ['Greece', 'Nigeria', 90, 60],
-  ['Dominican Republic', 'Nigeria', 90, 60],
+  ['Italy', 'Angola', 90, 60],
+  ['Italy', 'Philippines', 90, 60],
+  ['Italy', 'Dominican Republic', 90, 60],
+  ['Dominican Republic', 'Philippines', 90, 60],
+  ['Dominican Republic', 'Angola', 90, 60],
+  ['Philippines', 'Angola', 90, 60],
 ]
 
 describe('FIBA points', () => {
@@ -50,20 +50,20 @@ describe('FIBA points', () => {
 
   it('gives a 3-0 team 6 points and an 0-3 team 3, not 9 and 0', () => {
     const rows = rank(TEAMS.A, A(DECISIVE))
-    const us = rows.find((r) => r.name === 'United States')
-    const nigeria = rows.find((r) => r.name === 'Nigeria')
-    expect(us.W).toBe(3)
-    expect(us.Pts).toBe(6)
-    expect(nigeria.L).toBe(3)
-    expect(nigeria.Pts).toBe(3) // a football table would say 0
+    const italy = rows.find((r) => r.name === 'Italy')
+    const angola = rows.find((r) => r.name === 'Angola')
+    expect(italy.W).toBe(3)
+    expect(italy.Pts).toBe(6)
+    expect(angola.L).toBe(3)
+    expect(angola.Pts).toBe(3) // a football table would say 0
   })
 
   it('counts points for and against, not goals', () => {
-    const rows = rank(TEAMS.A, A([['United States', 'Nigeria', 88, 61]]))
-    const us = rows.find((r) => r.name === 'United States')
-    expect(us.PF).toBe(88)
-    expect(us.PA).toBe(61)
-    expect(us.PD).toBe(27)
+    const rows = rank(TEAMS.A, A([['Italy', 'Angola', 88, 61]]))
+    const italy = rows.find((r) => r.name === 'Italy')
+    expect(italy.PF).toBe(88)
+    expect(italy.PA).toBe(61)
+    expect(italy.PD).toBe(27)
   })
 
   it('never records a draw column', () => {
@@ -71,21 +71,21 @@ describe('FIBA points', () => {
   })
 
   it('ignores a level score rather than treating it as a draw', () => {
-    const rows = rank(TEAMS.A, A([['United States', 'Nigeria', 70, 70]]))
+    const rows = rank(TEAMS.A, A([['Italy', 'Angola', 70, 70]]))
     for (const r of rows) expect(r.P).toBe(0)
   })
 
   it('gamesAmong keeps only decided group-stage games between the named teams', () => {
     const board = A([
-      ['United States', 'Nigeria', 80, 70],
-      ['Greece', 'Dominican Republic', 71, 70],
+      ['Dominican Republic', 'Philippines', 80, 70],
+      ['Italy', 'Angola', 71, 70],
     ])
-    const among = gamesAmong(['United States', 'Nigeria'], board)
+    const among = gamesAmong(['Dominican Republic', 'Philippines'], board)
     expect(among).toHaveLength(1)
-    expect(among[0].t1).toBe('United States')
+    expect(among[0].t1).toBe('Dominican Republic')
     // a level score is skipped as a data error
-    expect(gamesAmong(['Greece', 'Dominican Republic'],
-      A([['Greece', 'Dominican Republic', 70, 70]]))).toHaveLength(0)
+    expect(gamesAmong(['Italy', 'Angola'],
+      A([['Italy', 'Angola', 70, 70]]))).toHaveLength(0)
   })
 
   it('isGroupStage recognises both group stages and nothing else', () => {
@@ -97,87 +97,88 @@ describe('FIBA points', () => {
 })
 
 describe('tie-breakers', () => {
-  // United States and Greece both finish 2-1. Greece won the game between them, so
-  // head-to-head puts Greece first, but the US ran up a far bigger overall point
-  // difference (a blowout of Nigeria). FIBA ranks head-to-head FIRST, so Greece
-  // must win the tie even though the US has the better overall PD.
+  // Italy and Dominican Republic both finish 2-1. Dominican Republic won the game
+  // between them, so head-to-head puts Dominican Republic first, but Italy ran up a
+  // far bigger overall point difference (a blowout of Angola). FIBA ranks
+  // head-to-head FIRST, so Dominican Republic must win the tie even though Italy has
+  // the better overall PD.
   const conflicting = A([
-    ['United States', 'Greece', 70, 72], // Greece win the head-to-head
-    ['United States', 'Dominican Republic', 80, 70],
-    ['United States', 'Nigeria', 120, 60], // ...but the US inflate their overall PD
-    ['Greece', 'Dominican Republic', 75, 70],
-    ['Nigeria', 'Greece', 80, 70], // Greece drop a game, still 2-1
-    ['Dominican Republic', 'Nigeria', 75, 70],
+    ['Italy', 'Dominican Republic', 70, 72], // Dominican Republic win the head-to-head
+    ['Italy', 'Philippines', 80, 70],
+    ['Italy', 'Angola', 120, 60], // ...but Italy inflate their overall PD
+    ['Dominican Republic', 'Philippines', 75, 70],
+    ['Angola', 'Dominican Republic', 80, 70], // Dominican Republic drop a game, still 2-1
+    ['Philippines', 'Angola', 75, 70],
   ])
 
   it('puts head-to-head AHEAD of overall point difference', () => {
     const tied = rank(TEAMS.A, conflicting).filter((r) => r.Pts === 5)
-    expect(tied.map((r) => r.name)).toEqual(['Greece', 'United States'])
+    expect(tied.map((r) => r.name)).toEqual(['Dominican Republic', 'Italy'])
   })
 
   it('is genuinely a conflict: overall PD alone would order it differently', () => {
     const tied = rank(TEAMS.A, conflicting).filter((r) => r.Pts === 5)
     const byPD = [...tied].sort((a, b) => b.PD - a.PD).map((r) => r.name)
-    expect(byPD).toEqual(['United States', 'Greece'])
+    expect(byPD).toEqual(['Italy', 'Dominican Republic'])
     expect(byPD).not.toEqual(order(tied))
   })
 
   it('breaks a straight two-way tie on the game between them', () => {
     const board = A([
-      ['United States', 'Nigeria', 90, 60],
-      ['Greece', 'Dominican Republic', 90, 60],
-      ['United States', 'Greece', 70, 75], // Greece beat US
-      ['Dominican Republic', 'United States', 60, 80],
-      ['Nigeria', 'Greece', 60, 80],
-      ['Dominican Republic', 'Nigeria', 90, 60],
+      ['Italy', 'Angola', 90, 60],
+      ['Dominican Republic', 'Philippines', 90, 60],
+      ['Italy', 'Dominican Republic', 70, 75], // Dominican Republic beat Italy
+      ['Philippines', 'Italy', 60, 80],
+      ['Angola', 'Dominican Republic', 60, 80],
+      ['Philippines', 'Angola', 90, 60],
     ])
     const names = order(rank(TEAMS.A, board))
-    expect(names.indexOf('Greece')).toBeLessThan(names.indexOf('United States'))
+    expect(names.indexOf('Dominican Republic')).toBeLessThan(names.indexOf('Italy'))
   })
 
   it('builds a head-to-head table from only the games between the named teams', () => {
     const board = A([
-      ['United States', 'Greece', 80, 70],
-      ['United States', 'Nigeria', 120, 50], // must NOT affect the US/Greece sub-table
+      ['Italy', 'Dominican Republic', 80, 70],
+      ['Italy', 'Angola', 120, 50], // must NOT affect the Italy/Dominican Republic sub-table
     ])
-    const sub = headToHead(['United States', 'Greece'], board)
-    expect(sub['United States'].PD).toBe(10)
-    expect(sub['United States'].PF).toBe(80)
-    expect(sub.Greece.PD).toBe(-10)
+    const sub = headToHead(['Italy', 'Dominican Republic'], board)
+    expect(sub['Italy'].PD).toBe(10)
+    expect(sub['Italy'].PF).toBe(80)
+    expect(sub['Dominican Republic'].PD).toBe(-10)
   })
 
   it('leaves an empty head-to-head table when the teams have not met', () => {
-    const sub = headToHead(['United States', 'Greece'], GAMES)
-    expect(sub['United States']).toEqual({ Pts: 0, PD: 0, PF: 0 })
+    const sub = headToHead(['Italy', 'Dominican Republic'], GAMES)
+    expect(sub['Italy']).toEqual({ Pts: 0, PD: 0, PF: 0 })
   })
 
   // FIBA draws lots as a last resort; the app stands in the FIBA World Ranking.
   // These assert it is the RANKING, not the alphabet.
   it('settles an unbreakable tie by world ranking, not alphabetically', () => {
-    expect(byLots('United States', 'Greece')).toBeLessThan(0) // 1 before 9
-    expect(byLots('Nigeria', 'Greece')).toBeGreaterThan(0) // 25 after 9
-    expect(byLots('Serbia', 'Germany')).toBeLessThan(0) // 2 before 3
-    expect(byLots('Qatar', 'Spain')).toBeGreaterThan(0) // 32 after 8
+    expect(byLots('Italy', 'Angola')).toBeLessThan(0) // 9 before 27
+    expect(byLots('Angola', 'Italy')).toBeGreaterThan(0) // 27 after 9
+    expect(byLots('Serbia', 'Germany')).toBeLessThan(0) // 5 before 10
+    expect(byLots('South Sudan', 'Spain')).toBeGreaterThan(0) // 31 after 1
   })
 
   it('opens the unplayed tournament in world-ranking order', () => {
     expect(order(rank(TEAMS.A, GAMES))).toEqual([
-      'United States', 'Greece', 'Dominican Republic', 'Nigeria',
+      'Italy', 'Dominican Republic', 'Philippines', 'Angola',
     ])
-    expect(order(rank(TEAMS.H, GAMES))).toEqual(['Spain', 'Türkiye', 'Venezuela', 'Qatar'])
+    expect(order(rank(TEAMS.H, GAMES))).toEqual(['France', 'Canada', 'Latvia', 'Lebanon'])
   })
 
   it('still lets results beat the ranking', () => {
-    // Nigeria (25th) sweeps its group, so it must top it despite the ranking.
+    // Angola (27th) sweeps its group, so it must top it despite the ranking.
     const board = A([
-      ['Nigeria', 'United States', 80, 70],
-      ['Nigeria', 'Greece', 85, 70],
-      ['Nigeria', 'Dominican Republic', 90, 70],
-      ['United States', 'Greece', 75, 70],
-      ['United States', 'Dominican Republic', 75, 70],
-      ['Greece', 'Dominican Republic', 75, 70],
+      ['Angola', 'Italy', 80, 70],
+      ['Angola', 'Dominican Republic', 85, 70],
+      ['Angola', 'Philippines', 90, 70],
+      ['Italy', 'Dominican Republic', 75, 70],
+      ['Italy', 'Philippines', 75, 70],
+      ['Dominican Republic', 'Philippines', 75, 70],
     ])
-    expect(order(rank(TEAMS.A, board))[0]).toBe('Nigeria')
+    expect(order(rank(TEAMS.A, board))[0]).toBe('Angola')
   })
 })
 
@@ -204,7 +205,7 @@ describe('advancement', () => {
   })
 
   it('says nothing about placing while a group is still in progress', () => {
-    const qual = computeQualification(A([['United States', 'Nigeria', 90, 60]]))
+    const qual = computeQualification(A([['Italy', 'Angola', 90, 60]]))
     for (const r of qual.groups.A) expect(rowStatus(r, qual.completion.A)).toBeNull()
     expect(rowStatusR2(qual.groups.A[0], false)).toBeNull()
   })

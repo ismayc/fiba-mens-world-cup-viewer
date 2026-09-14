@@ -1,7 +1,7 @@
 {
-  "name": "FIBA Men's World Cup 2027 — Schedule Viewer",
-  "short_name": "FIBA MWC 2027",
-  "description": "All 92 games of the FIBA Men's Basketball World Cup 2027 in Doha, Qatar, in your timezone: scores, the two group stages, standings, and the knockout bracket.",
+  "name": "FIBA Men's World Cup 2023 — Schedule Viewer",
+  "short_name": "FIBA MWC 2023",
+  "description": "All 92 games of the 2023 FIBA Men's Basketball World Cup, co-hosted by the Philippines, Japan and Indonesia, in your timezone: scores, the two group stages, standings, and the knockout bracket.",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",

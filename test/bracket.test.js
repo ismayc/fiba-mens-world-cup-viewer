@@ -24,15 +24,15 @@ const put = (num, patch) => gamesByNum(GAMES.map((g) => (g.num === num ? { ...g,
 describe('the wiring', () => {
   it('feeds every quarter-final from two second-round group placings', () => {
     expect(ENTRY_ROUND).toBe('QF')
-    expect(labelsOf(85)).toEqual(['Winner Group I', '2nd Group L'])
-    expect(labelsOf(86)).toEqual(['Winner Group L', '2nd Group I'])
-    expect(labelsOf(87)).toEqual(['Winner Group J', '2nd Group K'])
-    expect(labelsOf(88)).toEqual(['Winner Group K', '2nd Group J'])
+    expect(labelsOf(85)).toEqual(['Winner Group I', '2nd Group J'])
+    expect(labelsOf(86)).toEqual(['Winner Group J', '2nd Group I'])
+    expect(labelsOf(87)).toEqual(['Winner Group K', '2nd Group L'])
+    expect(labelsOf(88)).toEqual(['Winner Group L', '2nd Group K'])
   })
 
-  // The crossover: I<->L and J<->K. A group's winner and runner-up are placed in
+  // The crossover: I<->J and K<->L. A group's winner and runner-up are placed in
   // opposite halves, so they can only meet again in the Final.
-  it('crosses I<->L and J<->K so a group cannot rematch before the Final', () => {
+  it('crosses I<->J and K<->L so a group cannot rematch before the Final', () => {
     // 1st I is in game 85 (left half), 2nd I in game 86 (right half).
     const half = (num) => (BRACKET.left.QF.includes(num) ? 'left' : 'right')
     for (const key of ['I', 'J', 'K', 'L']) {
@@ -82,9 +82,9 @@ describe('group routes', () => {
   it('maps each second-round group’s two placings to their quarter-finals', () => {
     const map = groupSlotMap(GAMES)
     expect(map.I).toEqual({ win: 85, second: 86 })
-    expect(map.L).toEqual({ win: 86, second: 85 })
-    expect(map.J).toEqual({ win: 87, second: 88 })
-    expect(map.K).toEqual({ win: 88, second: 87 })
+    expect(map.J).toEqual({ win: 86, second: 85 })
+    expect(map.K).toEqual({ win: 87, second: 88 })
+    expect(map.L).toEqual({ win: 88, second: 87 })
   })
 
   it('routes both placings of every group to a quarter-final', () => {
@@ -97,7 +97,7 @@ describe('group routes', () => {
 
   it('reads labels from a record whose teams are already resolved', () => {
     const resolved = { ...byNum[85], t1: 'United States', t2: 'Serbia' }
-    expect(slotLabels(resolved)).toEqual(['Winner Group I', '2nd Group L'])
+    expect(slotLabels(resolved)).toEqual(['Winner Group I', '2nd Group J'])
   })
 
   it('parses a quarter-final slot to a group placing', () => {

@@ -27,27 +27,30 @@ export function feederTeams(label, byNum) {
   return { a: fg.t1, b: fg.t2, kind: hit[1], num: fg.num }
 }
 
-// THE WIRING, from FIBA's published knockout bracket:
+// THE WIRING, from FIBA's 2023 knockout bracket:
 //
-//   QF  85: 1st I - 2nd L      86: 1st L - 2nd I
-//       87: 1st J - 2nd K      88: 1st K - 2nd J
+//   QF  85: 1st I - 2nd J      86: 1st J - 2nd I
+//       87: 1st K - 2nd L      88: 1st L - 2nd K
 //   SF  89: W85 - W87          90: W86 - W88
 //   3rd 91: L89 - L90          Final 92: W89 - W90
 //
-// THE SECOND-ROUND GROUPS CROSS I<->L AND J<->K. A group's winner and runner-up
-// are placed so they can only meet again in the Final: 1st I is in game 85 (left
-// half) and 2nd I in game 86 (right half). Do not "tidy" the crossover into
-// I-vs-J / K-vs-L; that would let two teams from the same second-round group meet
-// in a semi-final.
+// THE SECOND-ROUND GROUPS CROSS I<->J AND K<->L. A group's winner and runner-up are
+// placed so they can only meet again in the Final: 1st I is in game 85 (left half)
+// and 2nd I in game 86 (right half). Do not "tidy" the crossover into I-vs-L /
+// J-vs-K (an earlier version did exactly that, and it was a bug: it did not match
+// the real 2023 bracket).
+//
+// The crossover is NOT hardcoded here: this diagram documents it, but the resolver
+// and groupSlotMap read it from the game LABELS in scripts/official.mjs. Correcting
+// a future edition's bracket is a data change, not a code change.
 //
 // Unlike the women's edition, there is no bye: all eight quarter-finalists arrive
 // from the second-round groups, so the bracket is a balanced 4-4 and every QF box
 // has two feeding group slots.
 //
-// SOURCE AND STATUS: this is the wiring FIBA used in 2023 (verified against that
-// tournament's results: Germany [1st I] met Latvia [2nd L], Canada [1st L] met
-// Slovenia [2nd I], and so on). FIBA has not yet published the 2027 bracket, so
-// this is the working default and must be re-checked when the 2027 sheet appears.
+// SOURCE: verified against the real 2023 tournament. Italy (1st I) met the United
+// States (2nd J), Lithuania (1st J) met Serbia (2nd I), Germany (1st K) met Latvia
+// (2nd L), and Canada (1st L) met Slovenia (2nd K).
 //
 // Like the World Cup and unlike the Euro, a third-place game is played (91). It
 // hangs off the bracket rather than sitting in it, so it gets its own key, and it

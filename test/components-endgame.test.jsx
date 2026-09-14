@@ -245,8 +245,8 @@ describe('spoiler-free and follow paths in the detail modal', () => {
 
   it('stars a team from the modal', () => {
     wrap(<MatchDetail match={played} tz={TZ} allMatches={GAMES} onClose={() => {}} />)
-    fireEvent.click(screen.getByRole('button', { name: 'Follow United States' }))
-    expect(screen.getByRole('button', { name: 'Unfollow United States' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Follow Italy' }))
+    expect(screen.getByRole('button', { name: 'Unfollow Italy' })).toBeInTheDocument()
   })
 
   it('offers no star for an unresolved bracket slot', () => {

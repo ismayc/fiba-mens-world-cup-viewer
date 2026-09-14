@@ -399,7 +399,7 @@ export default function App() {
       // dropped: unknown is not the same as unwatchable, and hiding the whole
       // final phase from a filtered schedule would read as a bug. See
       // utils/watch.js.
-      /* v8 ignore next -- unreachable while US broadcast is unannounced: every committed game has an empty tv, so isWatchable is always true; the filter goes live when the 2027 rights populate game.tv */
+      /* v8 ignore next -- unreachable: every committed 2023 game has an empty tv (no US broadcast data for a historical event), so isWatchable is always true and this filter never removes a game */
       if (filters.onMyServices && !isWatchable(m, services)) return false
       if (filters.stages.length && !filters.stages.includes(m.stage)) return false
       if (filters.group !== 'all' && m.group !== filters.group) return false
@@ -461,14 +461,14 @@ export default function App() {
       <header className="app-header">
         <div className="title-block">
           <h1>
-            <span className="trophy">🏀</span> FIBA Men&rsquo;s World Cup 2027
+            <span className="trophy">🏀</span> FIBA Men&rsquo;s World Cup 2023
           </h1>
           {/* Three separate facts, set as three cells rather than joined into
               one middle-dot string: what the app covers, where the tournament
               is, and whose clock the times are in. */}
           <p className="subtitle">
-            <span>{GAMES.length} games, 27 August–12 September</span>
-            <span>Doha, Qatar</span>
+            <span>{GAMES.length} games, 25 August–10 September</span>
+            <span>Philippines · Japan · Indonesia</span>
             <span>
               Times in <strong>{tz.replace(/_/g, ' ')}</strong>
             </span>
@@ -516,14 +516,6 @@ export default function App() {
         </div>
       </header>
 
-      <div className="provisional-note" role="note">
-        <strong>Placeholder draw.</strong> The 2027 field is not set: only Qatar
-        (host) and Türkiye have qualified so far, and the draw is expected in
-        spring 2027. The teams, groups, fixtures and venues shown here are
-        illustrative, so the format and timings can be explored before the real
-        draw.
-      </div>
-
       {navAway && (
         <div className="view-strip">
           <div className="view-strip-inner">
@@ -569,7 +561,7 @@ export default function App() {
           {resultsState === 'loading' && 'Loading live results…'}
           {resultsState === 'error' && 'Couldn’t reach results feed — showing schedule only.'}
           {resultsState === 'ok' && finishedCount > 0 && `${finishedCount} game${finishedCount === 1 ? '' : 's'} with scores`}
-          {resultsState === 'ok' && finishedCount === 0 && 'No results yet, tip-off is August 27, 2027'}
+          {resultsState === 'ok' && finishedCount === 0 && 'No results yet, tip-off is August 25, 2023'}
         </span>
         {liveCount > 0 && (
           <span className="results-live">● {liveCount} live now</span>
@@ -795,11 +787,12 @@ export default function App() {
 
       <footer className="app-footer">
         <p>
-          Tip-off times convert automatically to your selected timezone. Every game of this
-          tournament is played in the Doha metropolitan area, which is on Asia/Qatar (UTC+03:00)
-          year-round, so the venue clock is a single offset. The draw has not been held yet, so
-          the teams, groups, fixtures and venues shown are provisional placeholders. Filters,
-          timezone &amp; view are saved to the URL — bookmark or share it.
+          Tip-off times convert automatically to your selected timezone. The 2023 tournament was
+          co-hosted by the Philippines, Japan and Indonesia across five arenas on three timezones
+          (the Philippines at UTC+08:00, Okinawa at UTC+09:00, Jakarta at UTC+07:00), so each
+          game&rsquo;s clock comes from its own venue. All teams, scores, dates and venues are the
+          real, completed tournament. Filters, timezone &amp; view are saved to the URL, so you can
+          bookmark or share it.
         </p>
         <p className="disclaimer">
           An unofficial fan-made project. Not affiliated with, endorsed by, or sponsored by FIBA.

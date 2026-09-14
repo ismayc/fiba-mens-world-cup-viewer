@@ -17,15 +17,16 @@ describe('softTiebreaks', () => {
   })
 
   it('marks a block that only a drawing of lots could separate', () => {
-    // US, Greece and Dominican Republic form a 2-1 cycle with the same margin, and
-    // each beats Nigeria by the same margin, so nothing computable separates them.
+    // Italy, Dominican Republic and Philippines form a 2-1 cycle with the same
+    // margin, and each beats Angola by the same margin, so nothing computable
+    // separates them.
     const board = A([
-      ['United States', 'Greece', 80, 70],
-      ['Greece', 'Dominican Republic', 80, 70],
-      ['Dominican Republic', 'United States', 80, 70],
-      ['United States', 'Nigeria', 90, 60],
-      ['Nigeria', 'Greece', 60, 90],
-      ['Dominican Republic', 'Nigeria', 90, 60],
+      ['Italy', 'Dominican Republic', 80, 70],
+      ['Dominican Republic', 'Philippines', 80, 70],
+      ['Philippines', 'Italy', 80, 70],
+      ['Italy', 'Angola', 90, 60],
+      ['Angola', 'Dominican Republic', 60, 90],
+      ['Philippines', 'Angola', 90, 60],
     ])
     const notes = softTiebreaks(TEAMS.A, board)
     expect(notes.size).toBeGreaterThan(0)
@@ -33,21 +34,21 @@ describe('softTiebreaks', () => {
   })
 
   it('does NOT mark a points-level pair that head-to-head separates', () => {
-    // US and Greece both finish 2-1, but Greece won the game between them, so the
-    // tie is broken on the court, not by lots.
+    // Italy and Dominican Republic both finish 2-1, but Dominican Republic won the
+    // game between them, so the tie is broken on the court, not by lots.
     const board = A([
-      ['United States', 'Greece', 70, 80], // Greece win the head-to-head
-      ['United States', 'Dominican Republic', 90, 60],
-      ['United States', 'Nigeria', 90, 60],
-      ['Greece', 'Dominican Republic', 90, 60],
-      ['Greece', 'Nigeria', 90, 60],
-      ['Dominican Republic', 'Nigeria', 90, 60],
+      ['Italy', 'Dominican Republic', 70, 80], // Dominican Republic win the head-to-head
+      ['Italy', 'Philippines', 90, 60],
+      ['Italy', 'Angola', 90, 60],
+      ['Dominican Republic', 'Philippines', 90, 60],
+      ['Dominican Republic', 'Angola', 90, 60],
+      ['Philippines', 'Angola', 90, 60],
     ])
-    // US and Greece are level on 5 points; the head-to-head splits them, so neither
-    // is marked as lots.
+    // Italy and Dominican Republic are level on 5 points; the head-to-head splits
+    // them, so neither is marked as lots.
     const notes = softTiebreaks(TEAMS.A, board)
-    expect(notes.has('United States')).toBe(false)
-    expect(notes.has('Greece')).toBe(false)
+    expect(notes.has('Italy')).toBe(false)
+    expect(notes.has('Dominican Republic')).toBe(false)
   })
 })
 

@@ -132,19 +132,21 @@ describe('generated data', () => {
   })
 })
 
-describe('the Qatar calendar day', () => {
-  // All four 2027 arenas are in the Doha metro on Asia/Qatar (+03:00), and no game
-  // tips before the local morning, so every game lands on the same calendar day in
-  // UTC as in Qatar. If this ever stops holding, the pin has to change and the day
-  // headings need re-checking.
-  it('leaves every game on the same calendar day in UTC as in Qatar', async () => {
+describe('the venue-local calendar day', () => {
+  // 2023 spanned three host timezones, so there is no single tournament clock. Each
+  // game's committed `date` is its venue-local calendar day, and no game tips across
+  // local midnight, so `date` must equal the day its `ko` instant falls on in that
+  // venue's own timezone. If this ever stops holding, the day headings and the
+  // calendar feed drift.
+  it('leaves every game on its venue-local calendar day', async () => {
     const { GAMES } = await import('../src/data/games.js')
+    const { VENUES } = await import('../src/data/venues.js')
     const played = GAMES.filter((x) => x.ko)
     expect(played.length).toBeGreaterThan(0)
     for (const g of played) {
-      const utc = new Date(g.ko).toLocaleDateString('en-CA', { timeZone: 'UTC' })
-      const qatar = new Date(g.ko).toLocaleDateString('en-CA', { timeZone: 'Asia/Qatar' })
-      expect(utc, `game ${g.num}`).toBe(qatar)
+      const tz = VENUES[g.venue].tz
+      const local = new Date(g.ko).toLocaleDateString('en-CA', { timeZone: tz })
+      expect(local, `game ${g.num}`).toBe(g.date)
     }
   })
 })

@@ -50,9 +50,9 @@ afterEach(() => {
 describe('the shell', () => {
   it('names the tournament and counts its games', async () => {
     mount()
-    expect(await screen.findByText(/FIBA Men’s World Cup 2027/)).toBeInTheDocument()
-    expect(screen.getByText(/92 games, 27 August–12 September/)).toBeInTheDocument()
-    expect(document.querySelector('.subtitle').textContent).toContain('Doha, Qatar')
+    expect(await screen.findByText(/FIBA Men’s World Cup 2023/)).toBeInTheDocument()
+    expect(screen.getByText(/92 games, 25 August–10 September/)).toBeInTheDocument()
+    expect(document.querySelector('.subtitle').textContent).toContain('Philippines · Japan · Indonesia')
   })
 
   it('offers exactly the views this edition has', async () => {
@@ -105,21 +105,22 @@ describe('the shell', () => {
     await screen.findByText(/No results yet/)
     const headings = [...document.querySelectorAll('.day h2')].map((h) => h.textContent)
     expect(headings).toEqual([
-      'Friday, August 27, 2027',
-      'Saturday, August 28, 2027',
-      'Sunday, August 29, 2027',
-      'Monday, August 30, 2027',
-      'Tuesday, August 31, 2027',
-      'Wednesday, September 1, 2027',
-      'Friday, September 3, 2027',
-      'Saturday, September 4, 2027',
-      'Sunday, September 5, 2027',
-      'Monday, September 6, 2027',
-      'Wednesday, September 8, 2027',
-      'Thursday, September 9, 2027',
-      'Friday, September 10, 2027',
-      'Saturday, September 11, 2027',
-      'Sunday, September 12, 2027',
+      'Friday, August 25, 2023',
+      'Saturday, August 26, 2023',
+      'Sunday, August 27, 2023',
+      'Monday, August 28, 2023',
+      'Tuesday, August 29, 2023',
+      'Wednesday, August 30, 2023',
+      'Thursday, August 31, 2023',
+      'Friday, September 1, 2023',
+      'Saturday, September 2, 2023',
+      'Sunday, September 3, 2023',
+      'Tuesday, September 5, 2023',
+      'Wednesday, September 6, 2023',
+      'Thursday, September 7, 2023',
+      'Friday, September 8, 2023',
+      'Saturday, September 9, 2023',
+      'Sunday, September 10, 2023',
     ])
     expect(document.body.textContent).not.toMatch(/1969|1970/)
   })

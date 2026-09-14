@@ -13,7 +13,7 @@
 //
 // WHY THE FAVICON KEEPS ITS GROUND. The family default is a transparent tab icon
 // (the mark minus its background), but here the ground IS the identity: strip the
-// dark field and the Qatar-maroon ground and what is left is a plain basketball,
+// dark field and the maroon ground and what is left is a plain basketball,
 // which the NBA and March Madness viewers already wear. One app, one mark.
 //
 // This script VERIFIES its own output rather than trusting the exit code, because
@@ -25,7 +25,7 @@ import { writeFileSync, readFileSync, mkdtempSync, rmSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { tmpdir } from 'node:os'
-import { mark, markBadge, QATAR_MAROON } from './lib/mark.mjs'
+import { mark, markBadge, ACCENT_MAROON } from './lib/mark.mjs'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const pub = (f) => join(ROOT, 'public', f)
@@ -95,15 +95,15 @@ try {
     console.log(`  ${name.padEnd(20)} ${size}x${size}  stddev ${stddev.toFixed(3)}`)
   }
 
-  // The ground bar must actually be Qatar maroon, which catches a palette edit that
+  // The ground bar must actually be the maroon accent, which catches a palette edit that
   // silently fell back to black. Compare the RGB triple, not ImageMagick's pixel
   // string: the PNG carries alpha and prints srgba(...) where the reference swatch
   // prints srgb(...), so the strings never match even when the colors do.
   const rgb = (s) => (s.match(/\d+/g) || []).slice(0, 3).join(',')
   const at = (x, y) => rgb(magick([pub('icon-512.png'), '-format', `%[pixel:p{${x},${y}}]`, 'info:']))
-  const want = rgb(magick(['-size', '1x1', `xc:${QATAR_MAROON}`, '-format', '%[pixel:p{0,0}]', 'info:']))
+  const want = rgb(magick(['-size', '1x1', `xc:${ACCENT_MAROON}`, '-format', '%[pixel:p{0,0}]', 'info:']))
   const bottom = at(256, 480)
-  if (bottom !== want) fail(`ground bar is ${bottom}, expected Qatar maroon ${want}`)
+  if (bottom !== want) fail(`ground bar is ${bottom}, expected the maroon accent ${want}`)
 
   // Rewrite only the badge block inside the share card's source.
   const og = readFileSync(pub('og-image.svg'), 'utf8')

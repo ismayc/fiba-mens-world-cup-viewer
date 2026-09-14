@@ -20,12 +20,12 @@ import { playStage, withGroupScores } from './helpers/tournament.js'
 
 const A = (results) => withGroupScores('A', results, GAMES)
 const DECISIVE_A = [
-  ['United States', 'Nigeria', 90, 60],
-  ['United States', 'Dominican Republic', 90, 60],
-  ['United States', 'Greece', 90, 60],
-  ['Greece', 'Dominican Republic', 90, 60],
-  ['Greece', 'Nigeria', 90, 60],
-  ['Dominican Republic', 'Nigeria', 90, 60],
+  ['Italy', 'Angola', 90, 60],
+  ['Italy', 'Philippines', 90, 60],
+  ['Italy', 'Dominican Republic', 90, 60],
+  ['Dominican Republic', 'Philippines', 90, 60],
+  ['Dominican Republic', 'Angola', 90, 60],
+  ['Philippines', 'Angola', 90, 60],
 ]
 
 // Score only the two groups that feed second-round group I (A and B).
@@ -37,9 +37,9 @@ const afterR1 = playStage('R1', GAMES)
 describe('the first-round hop', () => {
   it('names each group’s current top two and the second-round group they feed', () => {
     const { r1 } = projectKnockout(GAMES)
-    expect(r1.A.first).toEqual({ team: 'United States', r2group: 'I' })
-    expect(r1.A.second).toEqual({ team: 'Greece', r2group: 'I' })
-    expect(r1.H.first).toEqual({ team: 'Spain', r2group: 'L' })
+    expect(r1.A.first).toEqual({ team: 'Italy', r2group: 'I' })
+    expect(r1.A.second).toEqual({ team: 'Dominican Republic', r2group: 'I' })
+    expect(r1.H.first).toEqual({ team: 'France', r2group: 'L' })
     expect(r1.G.first.r2group).toBe('L')
   })
 })
@@ -50,23 +50,23 @@ describe('the second-round hop', () => {
   })
 
   it('names a pending opponent slot while the paired group is unseeded', () => {
-    // Groups A & B are done (group I is seeded) but G & H are not (group L is not),
+    // Groups A & B are done (group I is seeded) but C & D are not (group J is not),
     // so I's winner has a quarter-final game but no named opponent yet.
     const { r2 } = projectKnockout(abDone)
     expect(r2.I.first.gameNum).toBe(85)
     expect(r2.I.first.round).toBe('QF')
     expect(r2.I.first.team).toBeTruthy()
     expect(r2.I.first.opponent).toBeNull()
-    expect(r2.I.first.opponentLabel).toBe('2nd Group L')
-    expect(r2.L).toBeNull()
+    expect(r2.I.first.opponentLabel).toBe('2nd Group J')
+    expect(r2.J).toBeNull()
   })
 
   it('names a real opponent once every group is seeded', () => {
     const { r2 } = projectKnockout(afterR1)
-    // Game 85 is Winner Group I v 2nd Group L: I's winner meets L's runner-up.
+    // Game 85 is Winner Group I v 2nd Group J: I's winner meets J's runner-up.
     expect(r2.I.first.opponent).toBeTruthy()
     expect(r2.I.first.opponentLabel).toBeNull()
-    // I's runner-up plays game 86 (v Winner Group L).
+    // I's runner-up plays game 86 (v Winner Group J).
     expect(r2.I.second.gameNum).toBe(86)
     expect(r2.I.second.opponent).toBeTruthy()
   })

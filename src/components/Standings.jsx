@@ -6,6 +6,7 @@ import {
   rowStatusR2,
   FIRST_ROUND_GROUPS,
   SECOND_ROUND_GROUPS,
+  carryoverGames,
 } from '../utils/qualification.js'
 import { computeSecondRound } from '../utils/secondRound.js'
 import { clinchBadge, groupPositionBounds, groupPositionBoundsR2, computeClinchR2 } from '../utils/clinch.js'
@@ -383,7 +384,7 @@ export default function Standings({ matches, tz, hideScores, clinch, onGoToMatch
               asItStands={showProjection ? proj.r2[key] : null}
               onGoToMatch={onGoToMatch}
               onSelectTeam={onSelectTeam}
-              ties={softTiebreaks(sr.members[key], matches)}
+              ties={softTiebreaks(sr.members[key], matches, carryoverGames)}
               liveTeams={liveTeams}
               pausedTeams={pausedTeams}
             />

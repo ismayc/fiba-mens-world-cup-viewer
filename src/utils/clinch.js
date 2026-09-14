@@ -15,12 +15,16 @@
 // only ever under-claim, never emit a false "clinched".
 //
 // ── TWO STAGES ──
-// The same enumeration runs over a first-round group (four fixed teams, its six
-// R1 games) and over a second-round group (the four qualifiers, their six games:
-// two carried over from the first round plus four new). analyzeMembers() is
-// generic over "a set of four teams and the games among them"; computeClinch()
-// runs it on the first round and computeClinchR2() on the second, once the second
-// round is seeded and its slots resolved to real teams.
+// The same enumeration runs over a first-round group (four fixed teams, its six R1
+// games) and over a second-round group. The second round differs in ONE way that
+// matters here: a qualifier's record counts all five of its group-stage games (its
+// full first-round record plus its two new second-round games), not just the games
+// among the four members. So for the second round, groupGamesFor() also gathers
+// each member's first-round games against teams that did NOT advance: those are
+// already final, so they never enter the enumeration, but they DO count toward the
+// points that decide the group. Only the four new second-round games are ever
+// enumerated. computeClinch() runs the first round and computeClinchR2() the
+// second, once the second round is seeded and its slots resolved to real teams.
 
 import { TEAMS } from '../data/teams.js'
 import {
@@ -40,17 +44,23 @@ import { resolvePlacingSlots } from './bracketResolve.js'
 // like an unplayed fixture.
 const isFinal = (g) => g.score && !g.live && !g.voided
 
-// All games (played or not) among a set of member teams, in the group phase. For a
-// first-round group this is its six R1 games (by group tag); for a second-round
-// group it is the four R2 games (by group tag) plus the two carried-over R1 games
-// (both sides in the membership). Unplayed R2 games are matched by their group tag
-// because their teams may still be placeholders; callers that enumerate must pass
-// games whose R2 slots are already resolved (see computeClinchR2).
-function groupGamesFor(memberNames, key, games) {
+// The games that count for a group. For a first-round group (secondRound=false)
+// this is its six R1 games (by group tag). For a second-round group
+// (secondRound=true) it is the four R2 games (by group tag, so unplayed slots are
+// matched even while their teams are still placeholders) PLUS every first-round
+// game each member played: their full carried-over record, including games against
+// teams that did not advance. The carried-over games are always final, so they land
+// in `played`, never in the enumeration; only unplayed R2 games are enumerated.
+// Callers that enumerate must pass games whose R2 slots are already resolved (see
+// computeClinchR2).
+function groupGamesFor(memberNames, key, games, secondRound = false) {
   const set = new Set(memberNames)
-  return games.filter(
-    (g) => isGroupStage(g) && (g.group === key || (set.has(g.t1) && set.has(g.t2))),
-  )
+  return games.filter((g) => {
+    if (!isGroupStage(g)) return false
+    if (g.group === key) return true
+    if (secondRound) return g.stage === 'R1' && (set.has(g.t1) || set.has(g.t2))
+    return set.has(g.t1) && set.has(g.t2)
+  })
 }
 
 // Order a block of teams level on points, as far as the tie-breakers can be known.
@@ -108,9 +118,12 @@ function spansFromRuns(runs) {
 function pointsFor(names, played, assumedWins) {
   const pts = {}
   for (const n of names) pts[n] = 0
+  // Only member teams are scored. In the second round `played` includes a member's
+  // games against teams that did not advance, where the opponent is not in `names`
+  // and must not be credited a point.
   const record = (winner, loser) => {
-    pts[winner] += WIN_POINTS
-    pts[loser] += LOSS_POINTS
+    if (winner in pts) pts[winner] += WIN_POINTS
+    if (loser in pts) pts[loser] += LOSS_POINTS
   }
   for (const g of played) {
     const [a, b] = g.score
@@ -236,7 +249,7 @@ export function computeClinchR2(games) {
     const members = r2Members(key, resolved)
     if (!members) continue
     const names = members.map((t) => t.name)
-    const { reach } = analyzeMembers(names, groupGamesFor(names, key, resolved))
+    const { reach } = analyzeMembers(names, groupGamesFor(names, key, resolved, true))
     for (const n of names) status[n] = statusFromReach(reach[n])
   }
   return status
@@ -262,7 +275,7 @@ export function groupPositionBoundsR2(games) {
     const members = r2Members(key, resolved)
     if (!members) continue
     const names = members.map((t) => t.name)
-    const { reach } = analyzeMembers(names, groupGamesFor(names, key, resolved))
+    const { reach } = analyzeMembers(names, groupGamesFor(names, key, resolved, true))
     for (const n of names) out[n] = { best: reach[n].best, worst: reach[n].worst }
   }
   return out

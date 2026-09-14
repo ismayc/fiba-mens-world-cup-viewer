@@ -20,9 +20,9 @@ import { resolveBracket } from '../../src/utils/bracketResolve.js'
 
 export const groupTeams = (g) => TEAMS[g].map((t) => t.name)
 
-// A fixed instant a few hours before the tournament's first tip-off (game on
-// 2027-08-27, earliest tip 14:00 Doha / AST +03:00).
-export const BEFORE_TIPOFF = new Date('2027-08-27T09:00:00+03:00')
+// A fixed instant a few hours before the tournament's first tip-off (25 August
+// 2023, earliest tip 16:00 in Manila / +08:00).
+export const BEFORE_TIPOFF = new Date('2023-08-25T13:00:00+08:00')
 
 // Pin the clock, for anything that asks "what is next", "has this tipped off" or
 // "is this game live". Only Date is faked, so real timers and waitFor keep working.
@@ -99,7 +99,7 @@ export function decideFinalPhase(games, num, t1, t2, score) {
   return games.map((g) => (g.num === num ? { ...g, t1, t2, score } : g))
 }
 
-const VENUE_ESPN_ID = { lusail: '10001', attiyah: '10002', rayyan: '10003', wakrah: '10004' }
+const VENUE_ESPN_ID = { philippinearena: '10001', moa: '10002', araneta: '10003', okinawa: '10004', jakarta: '10005' }
 
 // An ESPN scoreboard payload in the shape services/espn.js parses. `overrides`
 // maps a game number to { state, score, period, statusName, clock, detail }.

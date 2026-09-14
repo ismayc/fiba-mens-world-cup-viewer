@@ -52,12 +52,12 @@ function wrap(ui, { onDetail = () => {} } = {}) {
 }
 
 const DECISIVE = [
-  ['United States', 'Greece', 90, 60],
-  ['United States', 'Dominican Republic', 90, 60],
-  ['United States', 'Nigeria', 90, 60],
-  ['Greece', 'Dominican Republic', 80, 70],
-  ['Greece', 'Nigeria', 80, 70],
-  ['Dominican Republic', 'Nigeria', 75, 70],
+  ['Dominican Republic', 'Italy', 90, 60],
+  ['Dominican Republic', 'Angola', 90, 60],
+  ['Dominican Republic', 'Philippines', 90, 60],
+  ['Italy', 'Angola', 80, 70],
+  ['Italy', 'Philippines', 80, 70],
+  ['Angola', 'Philippines', 75, 70],
 ]
 const PLAYED = withGroupScores('A', DECISIVE, GAMES)
 // First-round Group A game numbers.
@@ -144,12 +144,12 @@ describe('Standings interaction', () => {
     const lots = withGroupScores(
       'A',
       [
-        ['United States', 'Greece', 80, 70],
-        ['Greece', 'Dominican Republic', 80, 70],
-        ['Dominican Republic', 'United States', 80, 70],
-        ['United States', 'Nigeria', 90, 60],
-        ['Nigeria', 'Greece', 60, 90],
-        ['Dominican Republic', 'Nigeria', 90, 60],
+        ['Dominican Republic', 'Italy', 80, 70],
+        ['Italy', 'Angola', 80, 70],
+        ['Angola', 'Dominican Republic', 80, 70],
+        ['Dominican Republic', 'Philippines', 90, 60],
+        ['Philippines', 'Italy', 60, 90],
+        ['Angola', 'Philippines', 90, 60],
       ],
       GAMES,
     )
@@ -286,8 +286,8 @@ describe('MatchCard interaction', () => {
 
   it('stars a team from a card', () => {
     wrap(<MatchCard match={num(GAMES, 1)} tz={TZ} byNum={byNum} slotMap={slotMap} />)
-    fireEvent.click(screen.getByRole('button', { name: 'Follow United States' }))
-    expect(screen.getByRole('button', { name: 'Unfollow United States' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Follow Italy' }))
+    expect(screen.getByRole('button', { name: 'Unfollow Italy' })).toBeInTheDocument()
   })
 
   it('opens the detail modal', () => {
@@ -324,7 +324,7 @@ describe('MatchCard interaction', () => {
   it('names a knockout game by its slot label', () => {
     wrap(<MatchCard match={num(GAMES, 85)} tz={TZ} byNum={byNum} slotMap={slotMap} />)
     expect(screen.getByText('Winner Group I')).toBeInTheDocument()
-    expect(screen.getByText('2nd Group L')).toBeInTheDocument()
+    expect(screen.getByText('2nd Group J')).toBeInTheDocument()
   })
 
   it('shows a candidate pair once the feeding game has both teams', () => {
@@ -343,7 +343,7 @@ describe('MatchCard interaction', () => {
         tz={TZ}
         byNum={byNum}
         slotMap={slotMap}
-        clinch={{ 'United States': 'won-group', Nigeria: 'eliminated' }}
+        clinch={{ Italy: 'won-group', Angola: 'eliminated' }}
       />,
     )
     expect(screen.getByText(/Won group/)).toBeInTheDocument()
@@ -428,7 +428,7 @@ describe('NextMatch interaction', () => {
     const scroll = vi.fn()
     Element.prototype.scrollIntoView = scroll
     const day = document.createElement('div')
-    day.id = 'day-2027-08-27'
+    day.id = 'day-2023-08-25'
     document.body.appendChild(day)
     wrap(<NextMatch matches={GAMES} tz={TZ} />)
     fireEvent.click(document.querySelector('.nm-live-row') || document.querySelector('.nm-jump'))
@@ -515,7 +515,7 @@ describe('CalendarModal and DayMatchesModal', () => {
 
   it('opens a game from the day pop-up', () => {
     const onDetail = vi.fn()
-    const day = GAMES.filter((g) => g.ko?.startsWith('2027-08-27'))
+    const day = GAMES.filter((g) => g.ko?.startsWith('2023-08-27'))
     wrap(<DayMatchesModal matches={day} tz={TZ} byNum={byNum} onClose={() => {}} />, { onDetail })
     fireEvent.click(document.querySelector('.dm-row'))
     expect(onDetail).toHaveBeenCalled()
@@ -649,9 +649,9 @@ describe('Filters interaction', () => {
       .find((f) => f.textContent.startsWith('Arena'))
       .querySelector('select')
     const opts = [...arenaSelect.options].map((o) => o.textContent)
-    expect(opts).toContain('Lusail Sports Arena')
-    expect(opts.length).toBe(5) // "Both arenas" + four Qatar venues
-    fireEvent.change(arenaSelect, { target: { value: 'lusail' } })
+    expect(opts).toContain('Philippine Arena')
+    expect(opts.length).toBe(6) // "All arenas" + five host venues
+    fireEvent.change(arenaSelect, { target: { value: 'philippinearena' } })
     expect(setFilters).toHaveBeenCalled()
   })
 

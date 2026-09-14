@@ -7,12 +7,14 @@
 // games were already played in the first round (the intra-pair head-to-heads) and
 // CARRY OVER. Only the four cross games are new.
 //
-// The carryover needs no special arithmetic: once membership is known, the
-// second-round table is just rankGroup(members, games), because gamesAmong()
-// (qualification.js) already collects a set of teams' group-stage games by
-// membership, which picks up the two carried-over games automatically. This
-// module's whole job is to work out WHO is in each second-round group, which it
-// can only do once both feeding first-round groups are decided.
+// The carryover is NOT just the four members' games among themselves. FIBA carries
+// each qualifier's ENTIRE first-round record forward (all three first-round games,
+// including those against the two teams that did not advance) and adds its two new
+// second-round games, so the second-round table is a five-game record. The table
+// is therefore rankGroup(members, games, carryoverGames): carryoverGames()
+// collects every group-stage game a member played, not only the games among the
+// four members. This module's job is to work out WHO is in each second-round
+// group, which it can only do once both feeding first-round groups are decided.
 
 import {
   R2_MEMBERSHIP,
@@ -21,6 +23,7 @@ import {
   ADVANCING_PER_GROUP,
   rankGroup,
   groupComplete,
+  carryoverGames,
 } from './qualification.js'
 import { TEAMS } from '../data/teams.js'
 
@@ -55,7 +58,7 @@ export function r2Members(r2key, games) {
 export function rankSecondRound(r2key, games) {
   const members = r2Members(r2key, games)
   if (!members) return null
-  return rankGroup(members, games)
+  return rankGroup(members, games, carryoverGames)
 }
 
 // Is a second-round group's own table complete (all six of its games, four new
@@ -73,7 +76,7 @@ export function computeSecondRound(games) {
   const completion = {}
   for (const key of SECOND_ROUND_GROUPS) {
     members[key] = r2Members(key, games)
-    groups[key] = members[key] ? rankGroup(members[key], games) : null
+    groups[key] = members[key] ? rankGroup(members[key], games, carryoverGames) : null
     completion[key] = members[key] ? groupComplete(members[key], games) : false
   }
   const allSeeded = SECOND_ROUND_GROUPS.every((k) => members[k])

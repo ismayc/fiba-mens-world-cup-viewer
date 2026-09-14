@@ -186,12 +186,12 @@ export default function MatchDetail({ match, tz, hideScores, allMatches, onClose
 
         <div className="md-meta">
           {/* Without a tip-off time there is no instant to render, only the
-              Doha calendar date FIBA has already fixed. Formatting the missing
-              `ko` anyway read "Wednesday, December 31, 1969 · 4:00 PM" here. */}
+              venue's calendar date. Formatting the missing `ko` anyway read
+              "Wednesday, December 31, 1969 · 4:00 PM" here. */}
           {match.ko ? (
             <>
               <div><strong>When</strong> {formatDateLong(match.ko, tz)} · {formatTime(match.ko, tz)} {tzAbbrev(match.ko, tz)}</div>
-              <div><strong>Doha local</strong> {formatTime(match.ko, venue.tz)} {tzAbbrev(match.ko, venue.tz)}</div>
+              <div><strong>{venue.city} local</strong> {formatTime(match.ko, venue.tz)} {tzAbbrev(match.ko, venue.tz)}</div>
             </>
           ) : (
             <div>

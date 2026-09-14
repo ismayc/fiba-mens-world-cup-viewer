@@ -12,14 +12,14 @@ const event = (headline) => ({
   events: [
     {
       id: 'x',
-      date: '2027-08-27T11:00Z',
+      date: '2023-08-26T12:40Z',
       competitions: [
         {
           notes: [{ headline }],
           status: { type: {} },
-          venue: { fullName: 'Lusail Sports Arena', address: { city: 'Lusail' } },
+          venue: { fullName: 'Mall of Asia Arena', address: { city: 'Pasay' } },
           competitors: [
-            { homeAway: 'home', team: { displayName: 'Nigeria' } },
+            { homeAway: 'home', team: { displayName: 'Greece' } },
             { homeAway: 'away', team: { displayName: 'United States' } },
           ],
         },
