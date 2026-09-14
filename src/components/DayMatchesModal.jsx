@@ -1,0 +1,154 @@
+import { useState } from 'react'
+import { FLAG_BY_TEAM } from '../data/teams.js'
+import { STAGE_LABELS } from '../data/games.js'
+import { colorForGame } from '../data/groupColors.js'
+import { formatTime, tzAbbrev, liveState, statusFlag, formatDayKeyLong } from '../utils/time.js'
+import { feederTeams } from '../utils/bracket.js'
+import { sideNames, stageLabel } from '../utils/slots.js'
+import { useModalA11y } from '../hooks/useModalA11y.js'
+import { useDetail } from '../context/detail.js'
+import LiveBadge from './LiveBadge.jsx'
+import FeederPair from './FeederPair.jsx'
+import { venueFor } from '../utils/venue.js'
+import { LEAGUE } from '../config/league.js'
+
+// One compact row per match — kickoff, teams, score/status, stage, venue. Clicking
+// opens the existing full match-detail modal.
+function DayRow({ match, tz, scoreHidden, onOpen, byNum }) {
+  const venue = venueFor(match)
+  const [side1, side2] = sideNames(match)
+  const f1 = feederTeams(side1, byNum)
+  const f2 = feederTeams(side2, byNum)
+  const stage = stageLabel(match)
+  const color = colorForGame(match)
+  const state = liveState(match)
+  const flag = statusFlag(match)
+  const voided = flag?.kind === 'voided'
+  const hasScore = Array.isArray(match.score)
+  const showScore = hasScore && !scoreHidden
+  return (
+    <li>
+      <button type="button" className="dm-row" onClick={() => onOpen(match)} title="Open game details">
+        <span className="dm-time">
+          {/* A game whose tip-off FIBA has not announced has no instant to
+              format; showing "TBC" beats the epoch time a null `ko` renders. */}
+          {match.ko ? (
+            <>
+              {formatTime(match.ko, tz)} <span className="dm-tz">{tzAbbrev(match.ko, tz)}</span>
+            </>
+          ) : (
+            <span className="kickoff-tbd" title="FIBA announces this tip-off time at the end of the previous round">TBC</span>
+          )}
+        </span>
+        <span className="dm-matchup">
+          <span className="dm-team">
+            {f1 ? (
+              <FeederPair feeder={f1} />
+            ) : (
+              <>
+                <span className="gg-flag">{FLAG_BY_TEAM[side1] || '•'}</span>
+                <span className="gg-name">{side1}</span>
+              </>
+            )}
+          </span>
+          <span className="dm-result">
+            {showScore ? (
+              <span className="gg-score">
+                {match.score[0]}–{match.score[1]}
+                {/* Overtime, not a shootout: basketball has no penalties, so the
+                    inherited `pens` render was dead in every arm. */}
+                {match.ot > 0 && (
+                  <span className="gg-pens">
+                    {' '}
+                    {match.ot > 1 ? `${match.ot}${LEAGUE.overtimeLabel}` : LEAGUE.overtimeLabel}
+                  </span>
+                )}
+              </span>
+            ) : hasScore ? (
+              <span className="gg-score gg-score-hidden">•–•</span>
+            ) : (
+              <span className="gg-vs">{LEAGUE.homeAwaySep}</span>
+            )}
+          </span>
+          <span className="dm-team">
+            {f2 ? (
+              <FeederPair feeder={f2} />
+            ) : (
+              <>
+                <span className="gg-flag">{FLAG_BY_TEAM[side2] || '•'}</span>
+                <span className="gg-name">{side2}</span>
+              </>
+            )}
+          </span>
+        </span>
+        <span className="dm-meta">
+          <span className="dm-stage" style={{ color }}>{stage}</span>
+          <span className="dm-venue">{venue.countryFlag} {venue.city}</span>
+        </span>
+        <span className="dm-status">
+          {match.live ? (
+            <LiveBadge match={match} />
+          ) : voided ? (
+            <span className="gg-badge gg-voided">{flag.label}</span>
+          ) : state === 'finished' ? (
+            <span className="gg-badge gg-final">FT</span>
+          ) : state === 'live' ? (
+            <span className="gg-badge gg-delayed">Delayed</span>
+          ) : (
+            <span className="gg-badge gg-upcoming">Upcoming</span>
+          )}
+        </span>
+      </button>
+    </li>
+  )
+}
+
+// Pop-up listing every match scheduled on one day, opened from the Week-view date
+// header. Each row drills into the full match-detail modal.
+export default function DayMatchesModal({ matches, dayKey, tz, hideScores, byNum, onClose }) {
+  const cardRef = useModalA11y(onClose)
+  const openDetail = useDetail()
+  const [revealed, setRevealed] = useState(false)
+  const scoreHidden = hideScores && !revealed
+
+  const fixtures = [...matches].sort((a, b) => new Date(a.ko) - new Date(b.ko))
+  const openMatch = (m) => {
+    onClose()
+    openDetail(m)
+  }
+
+  return (
+    <div className="md-overlay" onClick={onClose} role="dialog" aria-modal="true">
+      <div className="md-card gg-modal" ref={cardRef} tabIndex={-1} onClick={(e) => e.stopPropagation()}>
+        <button className="md-close" onClick={onClose} aria-label="Close">✕</button>
+
+        <div className="md-head">
+          {/* Titled from the day KEY the pop-up was opened for, not from the
+              first game's kickoff: on a day whose games are all awaiting a
+              tip-off time that kickoff is null and formats as the epoch. */}
+          <span className="md-stage">{formatDayKeyLong(dayKey, { year: false }) || 'Schedule'}</span>
+          <span className="gg-head-team">
+            {fixtures.length} game{fixtures.length === 1 ? '' : 's'}
+          </span>
+        </div>
+
+        {hideScores && (
+          <div className="gg-spoiler-bar">
+            <span>🙈 Scores hidden in spoiler-free mode.</span>
+            {!revealed && (
+              <button className="gg-reveal" onClick={() => setRevealed(true)}>Reveal scores</button>
+            )}
+          </div>
+        )}
+
+        <div className="md-section">
+          <ul className="gg-list dm-list">
+            {fixtures.map((m) => (
+              <DayRow key={m.num} match={m} tz={tz} scoreHidden={scoreHidden} onOpen={openMatch} byNum={byNum} />
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  )
+}

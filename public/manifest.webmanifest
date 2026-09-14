@@ -1,0 +1,16 @@
+{
+  "name": "FIBA Men's World Cup 2027 — Schedule Viewer",
+  "short_name": "FIBA MWC 2027",
+  "description": "All 92 games of the FIBA Men's Basketball World Cup 2027 in Doha, Qatar, in your timezone: scores, the two group stages, standings, and the knockout bracket.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#15171b",
+  "theme_color": "#15171b",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
