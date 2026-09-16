@@ -81,7 +81,8 @@ export const LEAGUE = {
     filenameBase: 'fiba-mens-world-cup-2023',
   },
 
-  // Netlify serves /calendar.ics; GitHub Pages cannot run the function. Both hosts are
-  // live once the Netlify site is created and linked for this repo.
-  feedHost: 'https://fiba-mens-world-cup-viewer.netlify.app',
+  // The origin the calendar subscription links point at. /calendar.ics is a STATIC
+  // file for this finished edition (scripts/build-calendar.mjs), so unlike the live
+  // siblings it is served by GitHub Pages, the canonical host, and not only Netlify.
+  feedHost: 'https://ismayc.github.io/fiba-mens-world-cup-viewer',
 }

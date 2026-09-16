@@ -12,9 +12,10 @@ tie-breaker and qualification math.
 🔗 **Live:** https://ismayc.github.io/fiba-mens-world-cup-viewer/ · https://fiba-mens-world-cup-viewer.netlify.app
 
 GitHub Pages is the canonical public URL and the one the link-preview card points
-at. Netlify is the mirror that keeps deploying when GitHub Actions is down, and it
-is also the only host that can serve `/calendar.ics`, since that feed is a Netlify
-function.
+at. Netlify is the mirror that keeps deploying when GitHub Actions is down. Both
+hosts serve `/calendar.ics`: for this finished edition the feed is a static file
+built from the committed schedule, not a Netlify function, so GitHub Pages serves it
+too.
 
 ## The real, completed tournament
 

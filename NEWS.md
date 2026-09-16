@@ -2,6 +2,16 @@
 
 Dated changelog, newest first.
 
+## 2026-09-16
+
+- **Calendar subscription feed now works.** The subscribable `/calendar.ics` was a
+  Netlify function that fetched ESPN live, but ESPN's fiba slug serves no 2023 event,
+  so in production the feed returned an error rather than the schedule. It is now a
+  static file built from the committed 2023 schedule, with every game's tip-off,
+  venue, and final score baked in. Because it is a real file rather than a function,
+  it is served by GitHub Pages, the canonical host, and by Netlify alike, where it
+  used to work on neither.
+
 ## 2026-09-14
 
 - **New viewer: the 2023 FIBA Men's Basketball World Cup.** Grown from the

@@ -7,14 +7,12 @@
   command = "npm run build"
   publish = "dist"
 
-[functions]
-  directory = "netlify/functions"
-
-# Clean URL for the auto-updating calendar subscription feed.
-[[redirects]]
-  from = "/calendar.ics"
-  to = "/.netlify/functions/calendar"
-  status = 200
+# The calendar subscription feed (/calendar.ics) is a STATIC file, not a function:
+# the 2023 tournament is complete and ESPN serves no 2023 fiba event, so there is
+# nothing to fetch live. scripts/build-calendar.mjs writes it into public/ (see the
+# prebuild hook), vite copies it to dist/, and Netlify serves the real file before the
+# SPA fallback below. It is a real file on GitHub Pages too, so the feed is no longer
+# Netlify-only.
 
 # Single-page app: serve index.html for any other path.
 [[redirects]]
