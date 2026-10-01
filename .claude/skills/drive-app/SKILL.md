@@ -1,9 +1,14 @@
 ---
-name: verify
-description: Build, launch, and drive the FIBA Women's World Cup viewer app to verify a change end-to-end in a real browser.
+name: drive-app
+description: Build, launch, and drive the FIBA Men's World Cup viewer app to verify a change end-to-end in a real browser.
 ---
 
 # Verifying changes in the running app
+
+> **Unverified for this app (found 2026-10-01).** This file is a byte-identical
+> copy of `fiba-womens-world-cup-viewer`'s skill. Everything below was probed against
+> the WOMEN'S viewer, so its counts, groups, dates, and path prefix describe that
+> tournament, not this one. Re-probe against this app before trusting any of it.
 
 Every selector and recipe below was probed against this app on 2026-08-29. This
 file was previously a copy of the soccer `world-cup-viewer` skill and told you to
