@@ -5,165 +5,144 @@ description: Build, launch, and drive the FIBA Men's World Cup viewer app to ver
 
 # Verifying changes in the running app
 
-> **Unverified for this app (found 2026-10-01).** This file is a byte-identical
-> copy of `fiba-womens-world-cup-viewer`'s skill. Everything below was probed against
-> the WOMEN'S viewer, so its counts, groups, dates, and path prefix describe that
-> tournament, not this one. Re-probe against this app before trusting any of it.
-
-Every selector and recipe below was probed against this app on 2026-08-29. This
-file was previously a copy of the soccer `world-cup-viewer` skill and told you to
-wait on an OpenFootball feed, click a "🎯 Radial" tab and look for "Match 101",
-none of which exist here. If something below does not resolve, re-probe and fix
-this file rather than working around it.
+Every selector, count, and string below was probed against THIS app on October 1,
+2026 (headless Chrome, 1280x900). Until then this file was a byte-identical copy of
+the women's FIBA viewer's skill, which describes an unplayed 2026 tournament. This
+app holds the **completed 2023 tournament**: all 92 games are scored and frozen in
+`src/data/games.js`, so nothing here is "pre-tournament". If something below does
+not resolve, re-probe and fix this file rather than working around it.
 
 ## Launch
 
 ```bash
-npm run dev -- --port 5199 &   # Vite dev server; app at http://localhost:5199/
+npx vite --port 5299 --strictPort &   # app at http://localhost:5299/
 ```
 
-`base: './'` in vite.config.js, so the app serves at the root path: no
-`/fiba-womens-world-cup-viewer/` prefix is needed in dev.
+Use your own port, not the shared :5173 (every viewer in the family defaults to it
+and they share localStorage there). `base: './'` in vite.config.js, so the app serves
+at the root path with no repo prefix. Stop the server when done.
 
 ## Drive (headless browser)
 
-No Playwright in devDependencies, so import it from the npx cache. Find the newest
-copy and check whether its browsers are actually installed (the `ms-playwright`
-cache gets cleared periodically, so an empty or missing dir is normal rather than a
-broken setup):
+Install `playwright-core` without a browser download into a scratch folder, and launch
+the installed Google Chrome headless. It runs its own throwaway profile and never
+touches a real Chrome window.
 
 ```bash
-for d in ~/.npm/_npx/*/node_modules/playwright; do echo -n "$d: "; node -p "require('$d/package.json').version"; done
-ls ~/Library/Caches/ms-playwright 2>/dev/null   # no chromium_headless_shell-* => install below
+cd <scratch> && npm init -y >/dev/null && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm i -s playwright-core
 ```
 
-If it's missing, install once (~94 MB, ~30s) against the newest version's dir:
-
-```bash
-cd ~/.npm/_npx/<hash> && node node_modules/playwright/cli.js install chromium
+```js
+import { chromium } from 'playwright-core'
+const browser = await chromium.launch({
+  executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true })
+const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
 ```
 
-Then write a plain `.mjs` script in the scratchpad and run it with `node`,
-importing `chromium` from that dir's `playwright/index.mjs`.
+## Stub the live feed
 
-## Always stub the live feed first
-
-The one live source is ESPN, and it can mark games live or delayed around real
-tip-offs. Block it in every run you want to be deterministic. Note the host:
-**`site.web.api`**, not `site.api`. Routing only the latter stubs nothing.
+The app still polls ESPN on load: today's ±1 day window plus the 2023 tournament
+dates, on **`site.web.api.espn.com`** (not `site.api`; routing the latter stubs
+nothing). Stub it for deterministic runs:
 
 ```js
 await page.route('**/site.web.api.espn.com/**', (r) => r.fulfill({ json: { events: [] } }))
 ```
 
+On October 1, 2026, every check below gave the same result stubbed and unstubbed.
+
+## You cannot simulate results here
+
+`applyLive` in `src/services/espn.js` keeps any committed score ("the generated
+schedule wins"), and every game has one. A doctored scoreboard can at most attach an
+`espnId`, which the detail modal uses to fetch a box score. The overlay matches by
+team pair, because every committed `espnId` is `null`. To test engine behavior on
+partial results, use the test helpers (`test/helpers/tournament.js`, `playStage`,
+`withGroupScores`) against `test/fixtures/pretournament-games.js`, not the browser.
+
 ## Selectors that work
 
 **Shell, any view**
-- `.app-header`, `.subtitle` (carries "shown in <strong>America/Phoenix</strong>"),
-  `.app-footer`
-- `.view-bar`, `.view-btn`, `.view-btn.active` — the five tabs are
-  `📋 Schedule`, `📆 Week`, `📊 Groups`, `🧮 Scenarios`, `🏆 Bracket`.
-  Match on the word (`page.locator('.view-btn', { hasText: 'Groups' })`), not the emoji.
-- `.results-bar` — the feed banner; carries a state class, `.results-bar.results-ok`
-  when the fetch succeeded. Pre-tournament it reads "No results yet, tip-off is
-  September 4, 2026".
-- `.view-strip` — the condensed sticky strip. It does **not** exist on load; it
-  appears only after scrolling (~1800px down the Schedule).
+- `.app-header`, `.subtitle` (reads "92 games, 25 August–10 September · Philippines ·
+  Japan · Indonesia · Times in America/Phoenix"), `.app-footer`
+- `.champ-banner` reads "👑 🇩🇪 Germany are the 2023 FIBA World Cup champions! 🏆"
+  (with 18 `.confetti` elements).
+- `.view-bar`, `.view-btn`, `.view-btn.active`: **four** tabs, `📋 Schedule`,
+  `📆 Week`, `📊 Groups`, `🏆 Bracket`. Scenarios is `groupStageOnly` and is hidden
+  once the tournament is archived. Match on the word
+  (`page.locator('.view-btn', { hasText: 'Groups' })`), not the emoji.
+- `.results-bar.results-ok`: "92 games with scores … live via ESPN".
+- `.spoiler-btn`: "👁 Scores shown"; clicking it flips to "🙈 Scores hidden" and
+  replaces each card's score with "🙈 tap to reveal".
+- `.view-strip`: absent on load, present after scrolling ~2500px.
 
-**Schedule** — `.schedule`, `.card` (36 of them), `.card-head`, `.card-body`,
-`.card-actions`, `.card-time`, `.card-tv`, `.tv-badge`, `.venue`, `.day-header`,
-`.day-toggle`.
-A card's buttons are `☆` (follow, one per team), `📺 How to watch (US) ▼`,
-`＋ Add to calendar`, and `ℹ Details`. Clicking the card body does nothing; open
-the modal with `button:has-text("Details")`.
+**Schedule.** The list opens almost empty, deliberately:
+- Each finished stage is held back behind a `.schedule-note` ("First round complete
+  — 48 first-round games hidden.") with a `.linklike` "Show first-round games"
+  button. There are five notes (first round 48, second round 16, classification 20,
+  quarter-finals 4, semi-finals 2). Clicking one adds that stage to the stage filter,
+  after which the other notes disappear and the list shows only the selected stages.
+- So a clean load shows only the last day (`Sunday, September 10, 2023`, 2 games:
+  Third-Place Game and Final), as one collapsed `.day-header`. `.card` is 0 until a
+  `.day-header` (a `.day-toggle`) is clicked.
+- `.pastdays-btn` reads "▾Hide past days" and starts with past days SHOWN. Every
+  day is in the past, so clicking it empties the schedule. It is not a reveal button.
+- **All 92 cards:** open `⚙ Filters & Search` (`.filters-toggle`), click every
+  `.stage-chips button` (`.stage-chip`, `.stage-chip.active` when on: First Round,
+  Second Round, Classification, Quarter-Final, Semi-Final, Third-Place Game, Final),
+  then click all 16 `.day-header`s.
+- Card parts: `.card-head`, `.card-body`, `.card-actions`, `.card-time`, `.card-tv`,
+  `.tv-badge`, `.venue`. A card's buttons are `☆` (one per team),
+  `📺 How to watch (US) ▼`, `＋ Add to calendar`, and `ℹ Details`. Find a game by
+  its number: `page.locator('.card').filter({ hasText: 'Game 92' })` is the Final,
+  Germany 83–77 Serbia.
 
-**Game detail modal** — `.md-overlay`, `.md-card`, `.md-close`, `.md-head`,
-`.md-stage`, `.md-teams`, `.md-team`, `.md-flag`. Escape closes it.
-There is no `.md-title`, `.md-body` or `.modal`.
+**Game detail modal** (`button:has-text("Details")`): `.md-overlay`, `.md-card`,
+`.md-close`, `.md-head`, `.md-stage`, `.md-teams`, `.md-team` (2), `.md-flag`,
+`.md-name`, `.md-score`, `.md-meta`, `.md-section` ("Going into this game" with a
+`.md-tape` comparison, then "How to watch (US)"), `.md-watch`, `.md-lang`,
+`.md-cal`. Escape closes it. There is no `.md-title`, `.md-body`, or `.modal`.
 
-**Groups (standings)** — `.standings-grid`, `.standings-table` (four, in group
-order A-D), `.standings-legend`, `.standings-tip`, `.standings-toolbar`,
-`.col-team`, `.col-pts`, `.col-finish`, `.finish`, `.q-badge`, `.ais-toggle`.
-Read a group's order with `.standings-table` → `tbody tr` → `.col-team`.
+**Groups (standings):** `.groups-view`, two `.stage-heading`s ("First round",
+"Second round"), two `.standings-grid`s, 12 `.group-card` / `.standings-table` in
+order A to L (`.group-title-btn` reads "Group A"), `.standings-legend`,
+`.standings-tip`, `.standings-toolbar`, `.ais-toggle`, `.col-team`, `.col-pts`,
+`.col-finish`, `.finish.finish-locked` (every Finish is a single locked number),
+`.q-badge` (`🥇 Won group`, `✅ Advanced`, `❌ Eliminated`), `.as-it-stands` (12).
+`.tiebreak-mark` is 0. Read a group's order with `.standings-table` → `tbody tr` →
+`.col-team`. Group A finishes Dominican Republic, Italy, Angola, Philippines;
+Group I finishes Italy, Serbia, Puerto Rico, Dominican Republic.
 
-**Scenarios** — `.scenarios-view`, `.scenarios`.
+**Bracket:** `.bracket-view`, `.bracket-hint`, `.path-picker` with a `.path-select`
+(the eight quarter-finalists), `.bracket`, `.bx-half-left` / `.bx-half-right`,
+`.bx-col` (5; heads Quarter-Final, Semi-Final, 🏆 Final, Semi-Final, Quarter-Final),
+`.bx-match` (8: four QF, two SF, Final, third place), `.bx-side` (16, each with a
+`.bx-team`), `.bx-score`, `.bx-flag`, `.bx-venue`, `.bx-col-final`,
+`.bx-third-label`. The quarter-finals cross **I↔J and K↔L** (game 85 is Italy, Winner
+Group I, against the United States, 2nd Group J). On a phone width the bracket is
+`MobileBracket` instead, which these selectors do not cover.
 
-**Bracket** — `.bracket-view`, `.bracket`, `.bracket-hint`, `.bx-col`,
-`.bx-col-head`, `.bx-col-body`, `.bx-match`, `.bx-side` (24 of them), `.bx-meta`,
-`.bx-flag`, `.bx-tbd`, `.bx-venue`, `.bx-col-final`, `.bx-third-label`.
+**Week:** `.week-view`, `.week-nav`, `.week-arrow` (2), `.week-title`, `.week-grid`,
+`.week-col` (7), `.week-day-btn`, `.week-cell`, `.wc-team`, `.wc-stage`,
+`.wc-venue`, `.week-legend`.
 
-**Week** — `.week-view`, `.week-grid`, `.week-nav`, `.week-day-btn`, `.week-cell`,
-`.wc-team`.
-
-**Filters & search** — behind the `⚙ Filters & Search` button, which reveals
-`.filters` / `.controls-bar`. Inside: `.stage-chips` (buttons read `Group Phase`,
-`Qualification to Quarter-Finals`, `Quarter-Final`, `Semi-Final`,
-`Third-Place Game`, `Final`), `.search-toggle`, and a timezone `<select>`.
-The search box appears only after clicking `.search-toggle`; it is
+**Filters and search** (Schedule only): `⚙ Filters & Search` (`.filters-toggle`)
+reveals `.filters`, `.stage-chips`, `.search-toggle`, and the selects (timezone among
+them). The search box appears only after clicking `.search-toggle`; it is
 `input.search[type=search]`, so its ARIA role is **searchbox, not textbox**.
 
-**Calendar modal** — `📤 Calendar` button → `.cal-modal`, `.cal-title`, `.cal-row`,
-`.cal-btn-primary`.
+**Calendar modal:** `📤 Calendar` → `.cal-modal`, `.cal-title`, `.cal-row`,
+`.cal-btn-primary`. Select it with `button:has-text("📤 Calendar")`: a bare
+`hasText: 'Calendar'` also matches every card's `＋ Add to calendar`.
 
-**My services modal** — `📺 Choose my services` → `.svc-modal`, `.svc-list`,
-`.svc-name`, `.svc-foot`.
-
-## Simulating results
-
-The app merges an ESPN overlay onto the committed board, so serve a doctored
-scoreboard and the real pipeline does the rest: standings, Finish ranges, clinch
-badges and the projected bracket all follow. Do **not** poke components directly.
-
-Match by `espnId` from `src/data/games.js`, never by rewriting team names, because a
-wrong matchup is a data bug, and ESPN's own abbreviations collide here (it serves
-Mali as "KOR"). `t1` in the committed board is filed as ESPN's `home` side.
-
-```js
-const finals = [
-  { id: '401907390', home: 'Japan', away: 'Mali',    hs: 90, as: 60 }, // game 1
-  { id: '401907394', home: 'Spain', away: 'Germany', hs: 88, as: 70 }, // game 6
-  { id: '401907438', home: 'Mali',  away: 'Spain',   hs: 61, as: 95 }, // game 9
-]
-const event = (f) => ({
-  id: f.id,
-  date: '2026-09-04T09:30Z',
-  status: { period: 4, displayClock: '0:00',
-            type: { state: 'post', name: 'STATUS_FINAL', description: 'Final' } },
-  competitions: [{
-    status: { period: 4, type: { state: 'post', name: 'STATUS_FINAL' } },
-    competitors: [
-      { homeAway: 'home', score: String(f.hs), team: { displayName: f.home } },
-      { homeAway: 'away', score: String(f.as), team: { displayName: f.away } },
-    ],
-  }],
-})
-await page.route('**/site.web.api.espn.com/**',
-  (r) => r.fulfill({ json: { events: finals.map(event) } }))
-```
-
-Verified to produce, in Group A: Spain 1st on 4 pts with a `✅ Through` badge,
-Finish narrowed from `1–4` to `1–3`, and `.as-it-stands` rendering. The app hits
-the route ~6 times per load (a ±1-day window), so serve the same payload every time.
-
-For an in-progress game use `state: 'in'` with a real `period`/`displayClock`; for
-overtime set `period` above 4 (FIBA plays four quarters, so period 5 is OT).
+**My services modal:** `📺 Choose my services` → `.svc-modal`, `.svc-list`,
+`.svc-name` (8), `.svc-foot`.
 
 ## Gotchas
 
-- **Nothing is played yet.** The committed board has no scores, so on a clean load
-  every group is 0-0, every Finish reads `1–4`, and `.tiebreak-mark` and
-  `.as-it-stands` are **absent by design**: the ⚖ marker deliberately skips teams
-  with `P === 0`. Assert their absence only if that is what you mean.
-- **The bracket has no teams pre-draw.** ESPN publishes none of the 12 final-phase
-  fixtures, so `.bx-side` holds slot labels like `· 3rd Group C`. There is no
-  `.bx-team` until real results resolve a slot.
-- **Group order is the world ranking, not the alphabet.** A clean load opens Group A
-  as Spain, Japan, Germany, Mali. See `byLots` in `src/utils/qualification.js`.
-- Rendering is time-of-day sensitive (countdowns, day folding, "Earlier games").
-  Don't assert exact times.
-- **Don't assert with loose attribute globs.** `[class*="active"]` also matches the
-  nav's `view-btn active`. Target the specific class, and dump
-  `evaluateAll(els => els.map(e => e.className))` when a count is non-zero but you
-  cannot say which element it is.
+- **Rendering is time-of-day sensitive** (local times, "today" for past days). Card
+  times above are America/Phoenix; don't assert exact times.
+- **Don't assert with loose attribute globs.** `[class*="active"]` also matches
+  `view-btn active` and `stage-chip active`. Target the specific class.
 - `innerText` returns null on SVG `<text>`; use `.textContent()` and confirm with
-  `.isVisible()` / `.boundingBox()` rather than trusting a text match.
+  `.isVisible()` / `.boundingBox()`.

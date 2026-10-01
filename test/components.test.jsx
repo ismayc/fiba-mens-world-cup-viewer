@@ -122,6 +122,22 @@ describe('Bracket', () => {
     expect(within(g85).getByText('2nd Group J')).toBeInTheDocument()
   })
 
+  it('names the crossover the quarter-final labels actually draw', () => {
+    // The hint said I↔L and J↔K after the labels were corrected to I↔J and K↔L, so
+    // derive the pairs from the committed QF labels instead of restating them.
+    const letter = (label) => label.match(/Group ([A-Z])$/)[1]
+    const pairs = new Set(
+      board
+        .filter((g) => g.stage === 'QF')
+        .map((g) => [letter(g.label1), letter(g.label2)].sort().join('↔')),
+    )
+    expect([...pairs].sort()).toEqual(['I↔J', 'K↔L'])
+    wrap(<Bracket matches={board} tz={TZ} />)
+    const hint = document.querySelector('.bracket-hint').textContent
+    const named = hint.match(/[A-Z]↔[A-Z]/g)
+    expect(named.sort()).toEqual([...pairs].sort())
+  })
+
   it('opens the detail modal when a game is clicked', () => {
     const onDetail = vi.fn()
     wrap(<Bracket matches={board} tz={TZ} />, { onDetail })

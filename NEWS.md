@@ -2,6 +2,20 @@
 
 Dated changelog, newest first.
 
+## 2026-10-01
+
+- **The bracket hint now names the real quarter-final crossover, I↔J and K↔L.** It
+  still said I↔L and J↔K, the wiring the bracket had before it was corrected against
+  the real 2023 draw (Italy, winner of Group I, met the United States, runner-up of
+  Group J). The bracket itself was already right; only the sentence above it was
+  stale. A new test derives the crossing pairs from the committed quarter-final
+  labels and checks the hint against them, so the two cannot drift apart again.
+- **The `drive-app` skill now describes this app.** It was a byte-identical copy of
+  the women's FIBA viewer's skill, written for an unplayed 2026 tournament. It was
+  rewritten from a live DOM probe of the completed 2023 board (four tabs, 92 games,
+  stages hidden behind "Show …" notes, twelve groups, and a full bracket), and a
+  checker that follows it literally resolved every selector and count.
+
 ## 2026-09-17
 
 - **The knockout bracket now draws elbow connectors between rounds.** Each match

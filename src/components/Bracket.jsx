@@ -267,7 +267,7 @@ export default function Bracket({ matches, tz, hideScores, focusMatch, onFocusHa
         <>
           <p className="bracket-hint">
             The eight quarter-finalists are the top two of the four second-round
-            groups (I–L). The groups cross I↔L and J↔K, so a group’s winner and
+            groups (I–L). The groups cross I↔J and K↔L, so a group’s winner and
             runner-up can only meet again in the Final.
           </p>
           <div className="bracket">
