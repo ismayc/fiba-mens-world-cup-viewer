@@ -443,6 +443,26 @@ describe('NextMatch interaction', () => {
     expect(screen.getAllByText('United States').length).toBeGreaterThan(0)
   })
 
+  // The followed team's first game (USA v New Zealand, Aug 26) is a day AFTER the
+  // tournament's first tip-off (Angola v Italy and Finland v Australia, both 08:00 UTC
+  // on Aug 25). So the card must skip every earlier game, not just happen to land on the
+  // first one. Checked against the unfollowed banner first, so the premise cannot rot if
+  // the fixture changes.
+  it('shows a followed team’s next game over every earlier game', () => {
+    const { unmount } = wrap(<NextMatch matches={GAMES} tz={TZ} />)
+    expect(document.querySelector('.nextmatch').textContent).toMatch(/Angola/)
+    expect(document.querySelector('.nextmatch').textContent).not.toMatch(/United States/)
+    unmount()
+
+    localStorage.setItem('fmwc:followed', JSON.stringify(['United States']))
+    wrap(<NextMatch matches={GAMES} tz={TZ} />)
+    const card = document.querySelector('.nextmatch')
+    expect(card).not.toHaveClass('nextmatch-stack')
+    expect(card.textContent).toMatch(/United States/)
+    expect(card.textContent).toMatch(/New Zealand/)
+    expect(card.textContent).not.toMatch(/Angola|Italy|Finland|Australia/)
+  })
+
   it('shows a live game ahead of the countdown', () => {
     const live = GAMES.map((g) =>
       g.num === 1 ? { ...g, score: [40, 38], live: { clock: '3:00', period: 'Q2' } } : g,
