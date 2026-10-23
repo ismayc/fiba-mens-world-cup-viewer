@@ -12,6 +12,7 @@ import LiveBadge from './LiveBadge.jsx'
 import { venueFor } from '../utils/venue.js'
 import { sideNames, stageLabel } from '../utils/slots.js'
 import { LEAGUE } from '../config/league.js'
+import { nameKey } from '../utils/watch.js'
 
 // Minute label including stoppage time, e.g. "45+3'".
 
@@ -264,7 +265,7 @@ export default function MatchDetail({ match, tz, hideScores, allMatches, onClose
             {/* Naming an outlet without its condition is the same mistake as not
                 naming it: a Basic With Ads subscriber does not get these games. */}
             {Object.entries(OUTLET_NOTES)
-              .filter(([outlet]) => match.tv?.includes(outlet))
+              .filter(([outlet]) => match.tv?.some((n) => nameKey(n) === nameKey(outlet)))
               .map(([outlet, note]) => (
                 <div key={outlet} className="md-watch-note">
                   <span className="md-lang">{outlet}</span> {note}

@@ -16,6 +16,7 @@ import {
   coverageSummary,
   hasKnownBroadcast,
   isWatchable,
+  nameKey,
   watchableServices,
 } from '../src/utils/watch.js'
 
@@ -120,6 +121,15 @@ describe('isWatchable', () => {
 })
 
 describe('broadcastNotBadged', () => {
+  it('matches a network whatever case ESPN spells it in', () => {
+    const keys = (tv) => watchableServices(tv, SERVICE_KEYS).map((s) => s.key)
+    expect(keys(['TNT']).length).toBeGreaterThan(0)
+    expect(keys(['tnt'])).toEqual(keys(['TNT']))
+    expect(keys(['TRUTV'])).toEqual(keys(['truTV']))
+    expect(nameKey('HBO Max')).toBe('hbo max')
+    expect(broadcastNotBadged(['hbo max'], watchableServices(HBO, ['hbomax']))).toEqual([])
+  })
+
   it('drops a network already named by a personalized badge', () => {
     expect(broadcastNotBadged(HBO, watchableServices(HBO, ['hbomax']))).toEqual([])
   })

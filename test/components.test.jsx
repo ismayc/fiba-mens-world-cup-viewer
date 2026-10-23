@@ -317,6 +317,20 @@ describe('broadcast branches (synthetic tv, since 2027 has no rights yet)', () =
     expect(await screen.findByText(/Box score/)).toBeInTheDocument()
     expect(screen.getByText(/Standard or Premium/)).toBeInTheDocument()
   })
+
+  it('still shows an outlet note when the feed spells the outlet in another case', async () => {
+    global.fetch = vi.fn(async () => ({ ok: true, json: async () => ({}) }))
+    wrap(
+      <MatchDetail
+        match={{ ...num(GAMES, 1), score: [88, 61], tv: ['hbo max'] }}
+        tz={TZ}
+        allMatches={GAMES}
+        onClose={() => {}}
+      />,
+    )
+    expect(await screen.findByText(/Box score/)).toBeInTheDocument()
+    expect(screen.getByText(/Standard or Premium/)).toBeInTheDocument()
+  })
 })
 
 describe('ScoreToasts', () => {
