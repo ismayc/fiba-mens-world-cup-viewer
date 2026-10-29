@@ -6,26 +6,30 @@
 // counts DOWN and resets four times, so "7:32" is ambiguous between the first
 // quarter and the fourth — and between regulation and overtime. The period is
 // what makes the badge mean anything, so it leads.
-export default function LiveBadge({ match, className = 'badge-live' }) {
+//
+// Spoiler-free mode shows only LIVE: an OT label says the game was tied after
+// regulation, and a badge that kept Q1-Q4 would give that away when it switched.
+export default function LiveBadge({ match, className = 'badge-live', hideScores = false }) {
   if (!match.live) return null
   const { clock, period, detail, delayed, label } = match.live
+  const shownDetail = hideScores ? undefined : detail
   // A paused match (delayed/weather or suspended) isn't playing — show it in
   // amber, not the red running clock, so it doesn't read as "in progress".
   if (delayed) {
     const word = label || 'Delayed'
     return (
-      <span className="badge-delayed" role="status" aria-label={word} title={detail || word}>
+      <span className="badge-delayed" role="status" aria-label={word} title={shownDetail || word}>
         ⏸ {word}
       </span>
     )
   }
-  const shown = [period, clock].filter(Boolean).join(' · ') || 'LIVE'
+  const shown = (!hideScores && [period, clock].filter(Boolean).join(' · ')) || 'LIVE'
   return (
     <span
       className={className}
       role="status"
       aria-label={`Live${shown === 'LIVE' ? '' : `, ${shown}`}`}
-      title={detail || 'Live'}
+      title={shownDetail || 'Live'}
     >
       ● {shown}
     </span>

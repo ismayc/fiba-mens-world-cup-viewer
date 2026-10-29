@@ -17,6 +17,8 @@ import Filters from '../src/components/Filters.jsx'
 import LiveBadge from '../src/components/LiveBadge.jsx'
 import WeekView from '../src/components/WeekView.jsx'
 import Standings from '../src/components/Standings.jsx'
+import DayMatchesModal from '../src/components/DayMatchesModal.jsx'
+import GroupGamesModal from '../src/components/GroupGamesModal.jsx'
 import { FollowProvider } from '../src/context/follow.jsx'
 import { PathProvider } from '../src/context/path.jsx'
 import { ServicesProvider } from '../src/context/services.jsx'
@@ -76,6 +78,16 @@ describe('a finished tournament', () => {
       expect(screen.getByText(/champions/i)).toBeInTheDocument()
       expect(screen.getByText(champion)).toBeInTheDocument()
       expect(screen.getByText(/Runners-up/)).toBeInTheDocument()
+    })
+  })
+
+  // The champion line is the biggest spoiler; ChampionBanner already hides it.
+  it('names no champion or runners-up in spoiler-free mode', () => {
+    afterTheFinal(() => {
+      wrap(<NextMatch matches={board} tz={TZ} hideScores />)
+      expect(screen.queryByText(champion)).toBeNull()
+      expect(screen.queryByText(/Runners-up/)).toBeNull()
+      expect(screen.getByText(/tournament has concluded/)).toBeInTheDocument()
     })
   })
 
@@ -243,6 +255,29 @@ describe('spoiler-free and follow paths in the detail modal', () => {
     expect(document.body.textContent).toMatch(/88/)
   })
 
+  // The live badge sits outside the score reveal, so it must not carry the period.
+  it('shows no live period on the card, the detail, or the day and group lists while hidden', () => {
+    const live = { ...num(GAMES, 1), score: [40, 38], live: { clock: '5:12', period: 'OT', detail: 'OT 5:12' } }
+    const noOt = () => {
+      expect(document.body.textContent).not.toMatch(/OT/)
+      expect(document.querySelector('[title*="OT"]')).toBeNull()
+    }
+    const card = wrap(<MatchCard match={live} tz={TZ} hidden />)
+    expect(document.querySelector('.badge-live').textContent.trim()).toBe('● LIVE')
+    noOt()
+    card.unmount()
+    const detail = wrap(<MatchDetail match={live} tz={TZ} hideScores allMatches={GAMES} onClose={() => {}} />)
+    noOt()
+    detail.unmount()
+    const day = wrap(
+      <DayMatchesModal matches={[live]} dayKey="2023-08-25" tz={TZ} hideScores byNum={gamesByNum(GAMES)} onClose={() => {}} />,
+    )
+    noOt()
+    day.unmount()
+    wrap(<GroupGamesModal group="A" matches={[live]} team="Italy" tz={TZ} hideScores onClose={() => {}} />)
+    noOt()
+  })
+
   it('stars a team from the modal', () => {
     wrap(<MatchDetail match={played} tz={TZ} allMatches={GAMES} onClose={() => {}} />)
     fireEvent.click(screen.getByRole('button', { name: 'Follow Italy' }))
@@ -298,6 +333,23 @@ describe('NextMatch late states', () => {
     )
     wrap(<NextMatch matches={live} tz={TZ} />)
     expect(screen.getAllByText('Italy').length).toBeGreaterThan(0)
+  })
+
+  // An OT badge on the banner says the game was tied after regulation.
+  it('shows only LIVE, never the period, in spoiler-free mode', () => {
+    const one = GAMES.map((g) =>
+      g.num === 1 ? { ...g, score: [40, 38], live: { clock: '5:12', period: 'OT' } } : g,
+    )
+    const { unmount } = wrap(<NextMatch matches={one} tz={TZ} hideScores />)
+    expect(screen.getByText('● in progress')).toBeInTheDocument()
+    unmount()
+    const two = GAMES.map((g) =>
+      g.num === 1 || g.num === 2 ? { ...g, score: [40, 38], live: { clock: '5:12', period: 'OT' } } : g,
+    )
+    const { container } = wrap(<NextMatch matches={two} tz={TZ} hideScores />)
+    const badges = [...container.querySelectorAll('.badge-live')].map((b) => b.textContent.trim())
+    expect(badges.length).toBeGreaterThan(1)
+    expect(badges.every((b) => b === '● LIVE')).toBe(true)
   })
 
   it('shows a paused game as delayed rather than as a countdown', () => {

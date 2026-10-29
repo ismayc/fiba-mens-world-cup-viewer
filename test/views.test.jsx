@@ -257,6 +257,23 @@ describe('LiveBadge', () => {
     const { container } = render(<LiveBadge match={{}} />)
     expect(container.firstChild).toBeNull()
   })
+
+  // Spoiler-free mode: an OT badge (or a Q4 badge that later changes) says the game
+  // was tied after regulation, and the tooltip carries ESPN's clock text too.
+  it('shows only LIVE, with no period, clock, or detail, when scores are hidden', () => {
+    const { container, unmount } = render(
+      <LiveBadge hideScores match={{ live: { clock: '5:12', period: 'OT', detail: 'OT 5:12' } }} />,
+    )
+    expect(container.textContent.trim()).toBe('● LIVE')
+    const badge = container.firstChild
+    expect(badge.getAttribute('title')).toBe('Live')
+    expect(badge.getAttribute('aria-label')).toBe('Live')
+    unmount()
+    const paused = render(
+      <LiveBadge hideScores match={{ live: { delayed: true, label: 'Delayed', detail: 'Delayed in OT' } }} />,
+    )
+    expect(paused.container.firstChild.getAttribute('title')).toBe('Delayed')
+  })
 })
 
 describe('NextMatch', () => {

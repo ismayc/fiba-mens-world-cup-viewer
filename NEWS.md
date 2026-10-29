@@ -2,6 +2,18 @@
 
 Dated changelog, newest first.
 
+## 2026-10-29
+
+- **Spoiler-free mode no longer gives away overtime or the champion.** A live badge
+  on the game card, the Week view, the day and group pop-ups, the bracket, the
+  next-game banner, and the game popout read the period and clock ("OT 5:12", "Q4"),
+  and its tooltip carried ESPN's clock text. An "OT" badge, or a "Q4" badge that later
+  changes, tells a hidden-score viewer the game was tied after regulation. With scores
+  hidden, those badges now read only "LIVE" and the tooltip says "Live". The next-game
+  banner also stopped naming the champion and the runners-up after the Final while
+  scores are hidden, the way the champion banner already did. The finals themselves
+  already showed only "FT", and every overtime tag already sat behind the score.
+
 ## 2026-10-01
 
 - **The bracket hint now names the real quarter-final crossover, I↔J and K↔L.** It
