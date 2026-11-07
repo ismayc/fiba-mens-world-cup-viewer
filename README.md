@@ -65,9 +65,11 @@ completeness but are not bracketed: the engine ranks the top 16 seriously.
 - **Next-game bar** — a countdown to the next tip-off (prioritizing your followed
   teams, or "Live now"), with a jump-to-game button.
 - **Result alerts** — opt-in 🔔 on-page toasts and browser notifications the moment
-  a game goes final, scoped to your followed teams or all games.
+  a game goes final, scoped to your followed teams or all games (none in
+  spoiler-free mode).
 - **Five views** — chronological schedule, a week calendar, the two group stages,
-  Scenarios, and the knockout bracket.
+  Scenarios, and the knockout bracket. Scenarios hides once the first round is over,
+  so this finished edition shows four tabs.
 - **Group standings** with FIBA's columns (P W L PF PA PD Pts) and the full
   tie-breaker chain, a **Finish** column showing the placings still arithmetically
   open to each team, and clinch badges (🥇 won group · ✅ advanced · ❌ out) the
@@ -80,7 +82,12 @@ completeness but are not bracketed: the engine ranks the top 16 seriously.
   the projected second round recompute exactly.
 - **Bracket** — the eight-team knockout with FIBA's slot labels, candidate pairs
   for unresolved feeds, and any team's path to the Final.
-- **Spoiler-free mode** — hide every score behind a tap-to-reveal.
+- **Box scores** — open a game for its line score, player table, and team-stat
+  comparison.
+- **My services** — pick your US providers and filter the schedule to what you can
+  actually watch.
+- **Spoiler-free mode** — hide every score, overtime marker, champion, and result
+  alert.
 - **Calendar** — add a single game, export a filtered set, or subscribe to an
   auto-updating `webcal://` feed.
 
@@ -91,8 +98,8 @@ tournament: every team, group, score, date and venue, parsed from Wikipedia's
 per-group tables and cross-checked (the standings this data produces match
 Wikipedia's own group tables exactly, and the resolved bracket matches the real
 quarter-finals, semi-finals and final). ESPN's `basketball/fiba` slug is
-time-multiplexed and does not serve the 2023 event, so there is no live feed to
-overlay: this build is the whole pipeline.
+time-multiplexed and does not serve the 2023 event, so the app's client-side ESPN
+overlay has nothing to add: the committed data is the whole source.
 
 ```bash
 npm run build:data              # write src/data/{games,teams,venues}.js from official.mjs
@@ -137,8 +144,7 @@ be "simplified":
    This is the real 2023 wiring, verified: Italy (1st I) met the United States (2nd
    J), Germany (1st K) met Latvia (2nd L). Do not "tidy" it into I with L / J with K.
 3. **`site.web.api.espn.com`, not `site.api.espn.com`.** The two serve identical
-   routes, but `site.api` returns 403 to datacenter IPs, which is every CI runner
-   and every Netlify function.
+   routes, but `site.api` returns 403 to datacenter IPs, which is every CI runner.
 
 ## Credits
 
